@@ -104,3 +104,49 @@ class SolarDocumentAnalyzer:
         self.timeout_seconds = timeout_seconds
         self._opener = opener
 
+    def extract_fields(self, source_text: str) -> dict[str, Any]:
+        if not source_text.strip():
+            raise AnalysisError("분석할 문서 글자가 없어요.")
+        if not self.api_key:
+            raise AnalysisError("AI 분석 서비스가 아직 연결되지 않았어요.")
+
+        request_data = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": "다음 OCR 원문을 분석해서 약속한 JSON 형식으로 돌려줘.\n\n" + source_text[:40000]},
+            ],
+            "temperature": 0.1,
+            "max_tokens": 1800,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {"name": "ttobak_analysis", "strict": True, "schema": MODEL_OUTPUT_SCHEMA},
+            },
+        }
+        request = Request(
+            self.endpoint,
+            data=json.dumps(request_data, ensure_ascii=False).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json; charset=utf-8",
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with self._opener(request, timeout=self.timeout_seconds) as response:
+                payload = json.load(response)
+            message = payload["choices"][0]["message"]["content"]
+            if not isinstance(message, str):
+                raise AnalysisError("AI 분석 내용을 확인할 수 없어요.")
+            result = json.loads(message)
+            if not isinstance(result, dict):
+                raise AnalysisError("AI 분석 결과의 JSON 형식이 올바르지 않아요.")
+            return result
+        except (HTTPError, URLError, TimeoutError, OSError) as exc:
+            raise AnalysisError("AI 분석 서비스에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.") from exc
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise AnalysisError("AI 분석 결과를 읽지 못했어요. 다시 시도해 주세요.") from exc
+
+    def analyze(self, source_text: str, *, document_id: int) -> dict[str, Any]:
+        return normalize_analysis(self.extract_fields(source_text), document_id=document_id, source_text=source_text)
