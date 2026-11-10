@@ -86,6 +86,81 @@ SYSTEM_PROMPT = """너는 고령자·한국어 초보자를 위해 생활 문서
 """
 
 
+def _text(value: Any) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise AnalysisError("AI 분석 결과의 글자 형식이 올바르지 않아요.")
+    return value.strip() or None
+
+
+def _text_list(value: Any) -> list[str] | None:
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise AnalysisError("AI 분석 결과의 목록 형식이 올바르지 않아요.")
+    result = [part for item in value if (part := _text(item))]
+    return result or None
+
+
+def _object(value: Any, keys: tuple[str, ...]) -> dict[str, str | None] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise AnalysisError("AI 분석 결과의 항목 형식이 올바르지 않아요.")
+    return {key: _text(value.get(key)) for key in keys}
+
+
+def normalize_analysis(raw: dict[str, Any], *, document_id: int, source_text: str, created_at: date | None = None) -> dict[str, Any]:
+    """AI 출력 형식을 검증하고 원문에 없는 날짜·금액을 보수적으로 표시합니다."""
+    if not isinstance(raw, dict):
+        raise AnalysisError("AI 분석 결과가 JSON 객체가 아니에요.")
+    title = _text(raw.get("title"))
+    summary = _text_list(raw.get("summary"))
+    if not title or not summary:
+        raise AnalysisError("문서 제목이나 요약을 확인할 수 없어요.")
+
+    date_info = _object(raw.get("datetime"), ("date", "time", "label", "note"))
+    if date_info is not None:
+        date_info["check"] = False
+
+    place = _object(raw.get("place"), ("name", "address", "note"))
+    if place is not None and not any(place.values()):
+        place = None
+    contact = _object(raw.get("contact"), ("name", "phone"))
+    if contact is not None and not any(contact.values()):
+        contact = None
+
+    items_raw = raw.get("items")
+    if items_raw is not None and not isinstance(items_raw, list):
+        raise AnalysisError("준비물 목록이 올바르지 않아요.")
+    items = []
+    for item in items_raw or []:
+        entry = _object(item, ("name", "detail"))
+        if entry and entry["name"]:
+            items.append(entry)
+
+    cautions = _text_list(raw.get("cautions"))
+    category = raw.get("category")
+    if category not in CATEGORIES:
+        category = "기타"
+
+    return {
+        "id": document_id,
+        "status": "completed",
+        "title": title,
+        "sender": _text(raw.get("sender")),
+        "category": category,
+        "created_at": (created_at or datetime.now(ZoneInfo("Asia/Seoul")).date()).isoformat(),
+        "summary": summary[:3],
+        "datetime": date_info,
+        "place": place,
+        "items": items or None,
+        "cautions": cautions,
+        "contact": contact,
+    }
+
+
 class SolarDocumentAnalyzer:
     """Solar 구조화 출력을 요청합니다. API 키가 없으면 외부 호출을 하지 않습니다."""
 
