@@ -1,0 +1,23 @@
+# Local development artifacts (shared, stack-independent)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+node_modules/
+dist/
+build/
+coverage/
+.coverage
+
+# Credentials and local user data
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+data/
+
+.DS_Store
+Thumbs.db
