@@ -32,6 +32,30 @@ class DocumentReadError(RuntimeError):
     """문서가 없거나 OCR 서비스가 정상적인 글자를 주지 못했을 때."""
 
 
+def text_from_parse_response(payload: dict[str, Any]) -> str:
+    """Document Parse 응답의 텍스트/마크다운을 읽습니다.
+
+    문서 표는 구조를 유지하는 Markdown을 우선 사용합니다.
+    """
+    content = payload.get("content")
+    if isinstance(content, dict):
+        for key in ("markdown", "text", "html"):
+            value = content.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    elif isinstance(content, str) and content.strip():
+        return content.strip()
+
+    elements = payload.get("elements")
+    if isinstance(elements, list):
+        blocks = [item.get("text", "") for item in elements if isinstance(item, dict)]
+        combined = "\n".join(part.strip() for part in blocks if isinstance(part, str) and part.strip())
+        if combined:
+            return combined
+
+    raise DocumentReadError("사진에서 읽을 수 있는 글자를 찾지 못했어요. 다시 촬영해 주세요.")
+
+
 def _multipart_form(path: Path, data: bytes, *, model: str, mode: str) -> tuple[bytes, str]:
     boundary = f"ttobak-{uuid.uuid4().hex}"
     mime = _ALLOWED_TYPES[path.suffix.lower()]
