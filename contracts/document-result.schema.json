@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://easytone-ttobak.local/contracts/document-result.schema.json",
+  "title": "또박 문서 분석 결과 v1",
+  "description": "C가 생성하고 B/D가 조회하는 문서 분석 결과. 근거 줄 번호와 마스킹은 포함하지 않는다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "status", "title", "sender", "category", "created_at", "summary", "datetime", "place", "items", "cautions", "contact"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "status": { "const": "completed" },
+    "title": { "type": "string", "minLength": 1 },
+    "sender": { "type": ["string", "null"] },
+    "category": {
+      "enum": ["병원·건강", "일·직장", "돈·요금", "학교·아이", "나라·복지", "비자·체류", "기타"]
+    },
+    "created_at": { "type": "string", "format": "date" },
+    "summary": {
+      "type": "array", "minItems": 1, "maxItems": 3,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "datetime": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["date", "time", "label", "note", "check"],
+      "properties": {
+        "date": { "type": ["string", "null"], "format": "date" },
+        "time": { "type": ["string", "null"], "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+        "label": { "type": ["string", "null"] },
+        "note": { "type": ["string", "null"] },
+        "check": { "type": "boolean" }
+      }
+    },
+    "place": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["name", "address", "note"],
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "address": { "type": ["string", "null"] },
+        "note": { "type": ["string", "null"] }
+      }
+    },
+    "items": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "detail"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "detail": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "cautions": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "contact": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["name", "phone"],
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "phone": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
