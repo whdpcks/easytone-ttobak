@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { buildResultTiles } from './resultTiles.mjs';
 import './DocumentResultPage.css';
 
 /**
@@ -57,6 +58,8 @@ export default function DocumentResultPage({
     };
   }, [documentId, loadDocument, revision]);
 
+  const tiles = useMemo(() => buildResultTiles(document), [document]);
+
   return (
     <main className="ttobak-c-result" aria-busy={loading}>
       {header}
@@ -89,6 +92,25 @@ export default function DocumentResultPage({
               <p className="ttobak-c-result__subinstruction">아래 항목을 누르면 자세히 알려드려요.</p>
             </section>
 
+            <section className="ttobak-c-result__tiles" aria-label="문서에서 확인한 내용">
+              {tiles.map(tile => (
+                <button
+                  className="ttobak-c-result__tile"
+                  key={tile.key}
+                  type="button"
+                  aria-label={`${tile.label}, 자세히 보기`}
+                  disabled
+                >
+                  <span className="ttobak-c-result__icon" aria-hidden="true">{tile.icon}</span>
+                  <span className="ttobak-c-result__tile-text">
+                    <strong>{tile.label}</strong>
+                    <span>{tile.teaser}</span>
+                    {tile.needsReview && <small className="ttobak-c-result__warning">원문을 확인해 주세요</small>}
+                  </span>
+                  <span className="ttobak-c-result__arrow" aria-hidden="true">›</span>
+                </button>
+              ))}
+            </section>
           </>
         )}
       </div>
