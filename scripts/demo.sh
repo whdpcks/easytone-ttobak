@@ -57,7 +57,7 @@ cleanup() {
   for p in "${PIDS[@]:-}"; do [[ -n "$p" ]] && kill_tree "$p"; done
   wait 2>/dev/null || true
 }
-trap 'exit 130' INT TERM
+trap 'exit 130' INT TERM HUP
 trap cleanup EXIT
 
 say "백엔드 켜는 중 → http://localhost:8000"
@@ -86,4 +86,6 @@ fi
 
 say "ngrok 연결 중 → https://$NGROK_DOMAIN"
 say "휴대폰에서 위 주소를 열고, 처음 한 번 'Visit Site'를 눌러 주세요. (끄기: Ctrl+C)"
-ngrok http --url="$NGROK_DOMAIN" 5173 --log=stdout --log-level=warn
+ngrok http --url="$NGROK_DOMAIN" 5173 --log=stdout --log-level=warn &
+PIDS+=($!)
+wait "$!"   # 백그라운드로 돌려야 끌 때(Ctrl+C·창 닫기·kill) 정리 코드가 바로 실행됨
