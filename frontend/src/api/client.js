@@ -46,7 +46,8 @@ function messageFrom(status, data) {
 }
 
 export async function request(path, { method = 'GET', body, headers, signal, auth = true } = {}) {
-  const h = { ...(headers || {}) };
+  // ngrok 무료 주소의 '경고 화면'을 API 요청에서는 건너뜀
+  const h = { 'ngrok-skip-browser-warning': '1', ...(headers || {}) };
   const token = auth ? getToken() : '';
   if (token) h.Authorization = `Bearer ${token}`;
 

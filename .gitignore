@@ -19,3 +19,7 @@ Thumbs.db
 
 # 서버 데이터 (SQLite, 음성 캐시, 업로드)
 backend/data/
+
+# ngrok 주소 (팀 공유, 깃에는 안 올림)
+.env.ngrok
+*.log
