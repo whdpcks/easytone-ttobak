@@ -25,6 +25,8 @@ import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Me from './pages/Me';
 import ComingSoon from './pages/ComingSoon';
+import Camera from './capture/Camera';
+import Loading from './capture/Loading';
 
 const auth = (el) => <RequireAuth>{el}</RequireAuth>;
 
@@ -43,8 +45,8 @@ export default function App() {
               <Route path="/me" element={auth(<Me />)} />
 
               {/* B: 촬영 → 로딩·도장 */}
-              <Route path="/camera" element={auth(<ComingSoon screen="camera" owner="B" />)} />
-              <Route path="/loading/:docId" element={auth(<ComingSoon screen="loading" owner="B" />)} />
+              <Route path="/camera" element={auth(<Camera />)} />
+              <Route path="/loading/:docId" element={auth(<Loading />)} />
 
               {/* C: 결과 */}
               <Route path="/result/:docId" element={auth(<ComingSoon screen="result" owner="C" />)} />

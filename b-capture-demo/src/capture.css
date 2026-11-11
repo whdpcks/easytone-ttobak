@@ -1,0 +1,297 @@
+.capture-app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  font-size: 20px;
+}
+
+.capture-app > button {
+  min-height: 56px;
+  padding: 12px 20px;
+  font: inherit;
+}
+
+.camera-preview {
+  position: relative;
+  display: grid;
+  grid-template-rows: calc(52px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) auto;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #151515;
+}
+
+.camera-preview video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.camera-overlay {
+  position: relative;
+  grid-row: 2;
+  min-height: 0;
+  margin-block: 6px;
+  container-type: size;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.a4-guide {
+  box-sizing: border-box;
+  width: min(82%, calc(100cqh * 210 / 297));
+  aspect-ratio: 210 / 297;
+  border: 3px solid #ff4545;
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 60%);
+}
+
+.camera-hint {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.camera-hint[role="alert"] { color: #ffbaba; }
+.a4-guide.is-ready { border-color: #27d66f; }
+
+.capture-progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin: 6px 0;
+  accent-color: #178d46;
+}
+
+.document-outline {
+  transform: scaleX(-1);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.document-outline polygon {
+  fill: rgb(255 216 65 / 8%);
+  stroke: #ffd841;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.camera-title {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 750;
+  color: #ff4545;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.capture-confirmation {
+  font-size: 20px;
+  width: min(360px, calc(100vw - 40px));
+  max-height: calc(100dvh - 48px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  padding: 24px;
+  overflow: auto;
+  border: 0;
+  border-radius: 18px;
+  background: #fffdf7;
+  color: #1d2940;
+  text-align: center;
+  box-shadow: 0 16px 60px rgb(0 0 0 / 35%);
+}
+
+.capture-confirmation::backdrop { background: rgb(0 0 0 / 60%); }
+
+.capture-confirmation h2 {
+  margin: 0 0 16px;
+  color: #1d2940;
+  font-size: 30px;
+  font-weight: 750;
+}
+
+.confirmation-thumbnail {
+  display: block;
+  width: 100%;
+  max-height: min(35svh, 240px);
+  object-fit: contain;
+  margin: 0 auto 20px;
+}
+
+.confirmation-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.confirmation-actions button {
+  flex: 1 1 120px;
+  min-height: 56px;
+  padding: 12px;
+  border: 1px solid #1d2940;
+  border-radius: 10px;
+  background: #fffdf7;
+  color: #1d2940;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.confirmation-actions button:last-child { background: #1d2940; color: #fff; }
+
+.camera-photos {
+  position: relative;
+  grid-row: 3;
+  min-width: 0;
+  margin: 0 max(10px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  z-index: 2;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 65%);
+  color: #fff;
+}
+
+.camera-photo-count {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Camera instruction motion adapted from the supplied Claude prototype. */
+.capture-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  overflow: auto;
+  background: #10131C;
+  color: #fff;
+  text-align: center;
+  transition: opacity .4s;
+}
+
+.capture-intro.is-leaving { opacity: 0; pointer-events: none; }
+.intro-stage { position: relative; flex: 0 0 auto; width: 220px; height: 220px; }
+
+.intro-paper {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 10px;
+  height: 120px;
+  box-sizing: border-box;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 4px;
+  background: #fbfaf4;
+  transform: perspective(300px) rotateX(35deg);
+}
+
+.intro-paper i { height: 6px; border-radius: 3px; background: #c9c7bd; }
+.intro-paper i:last-child { width: 70%; }
+
+.intro-phone {
+  position: absolute;
+  top: -40px;
+  left: 62px;
+  width: 96px;
+  height: 150px;
+  box-sizing: border-box;
+  border: 5px solid #fff;
+  border-radius: 18px;
+  animation: intro-hover 2.6s ease-in-out both;
+}
+
+.intro-phone::after {
+  content: '';
+  position: absolute;
+  inset: 14px 10px;
+  border: 3px solid #FF3B4E;
+  border-radius: 6px;
+  animation: intro-ready 2.6s both;
+}
+
+.intro-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(#fff, transparent 60%);
+  opacity: 0;
+  animation: intro-flash 2.6s both;
+}
+
+.capture-intro h2 { margin: 0; color: #fff; font-size: 26px; font-weight: 700; line-height: 1.3; }
+.capture-intro p { margin: 0; font-size: 20px; line-height: 1.5; }
+
+.capture-intro button {
+  min-height: 56px;
+  padding: 10px 24px;
+  border: 2px solid rgb(255 255 255 / 50%);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+@keyframes intro-hover {
+  0% { transform: translateY(-30px); opacity: 0; }
+  25% { opacity: 1; }
+  55%, 100% { transform: translateY(40px); }
+}
+
+@keyframes intro-ready {
+  0%, 62% { border-color: #FF3B4E; }
+  70%, 100% { border-color: #3BE38B; }
+}
+
+@keyframes intro-flash {
+  0%, 64% { opacity: 0; transform: scale(.4); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+@media (max-height: 600px) {
+  .capture-intro { gap: 12px; padding: 12px; }
+  .intro-stage { height: 180px; }
+  .capture-intro p { font-size: 18px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .capture-app { max-width: none; }
+  .capture-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+  .intro-stage { grid-row: span 3; justify-self: center; height: 220px; }
+  .capture-intro h2 { font-size: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capture-intro { transition: none; }
+  .intro-phone, .intro-phone::after, .intro-flash { animation: none; }
+}
