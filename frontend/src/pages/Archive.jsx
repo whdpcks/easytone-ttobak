@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
-import SoundButton from '../components/SoundButton';
+import Header, { HeaderButton } from '../common/Header';
+import { useUI } from '../common/UIContext';
 import { CAT_CONFIG, CATEGORIES, SUGGESTIONS } from '../utils/catConfig';
 import { getDocuments, searchDocuments } from '../api/documents';
 
@@ -12,14 +13,13 @@ import { getDocuments, searchDocuments } from '../api/documents';
 ─────────────────────────────────────────── */
 export default function Archive() {
   const navigate = useNavigate();
-  const { speak } = useVoice();
+  const { toast } = useUI();
 
   const [docs,         setDocs]         = useState([]);
   const [category,     setCategory]     = useState('전체');
   const [query,        setQuery]        = useState('');
   const [searchResult, setSearchResult] = useState(null); // { query, results:[{id,reason,doc}] }
   const [isSearching,  setIsSearching]  = useState(false);
-  const [toast,        setToast]        = useState('');
   const inputRef = useRef(null);
 
   /* 목록 로드 */
@@ -45,9 +45,7 @@ export default function Archive() {
       ? `"${searchResult.query}"와 관련된 문서를 ${searchResult.results.length}개 찾았어요. ${searchResult.results.map(r => r.doc?.title).join(', ')}.`
       : '관련된 문서를 못 찾았어요.';
 
-  useEffect(() => {
-    speak(guide);
-  }, [guide]);
+  useVoice(guide);
 
   /* AI 검색 실행 */
   async function doSearch(q) {
@@ -61,15 +59,10 @@ export default function Archive() {
       const results = await searchDocuments(trimmed);
       setSearchResult({ query: trimmed, results });
     } catch (e) {
-      showToast('검색 중 오류가 났어요. 다시 시도해주세요.');
+      toast('검색 중 오류가 났어요. 다시 시도해주세요.');
     } finally {
       setIsSearching(false);
     }
-  }
-
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(''), 2200);
   }
 
   function openDoc(id) {
@@ -90,17 +83,12 @@ export default function Archive() {
 
   return (
     <div className="app">
-      {/* 헤더 */}
-      <div className="hdr">
-        <button className="ib" onClick={() => navigate('/home')} aria-label="홈으로">
-          <Icon name="back" /><span>홈</span>
-        </button>
-        <div className="ttl">보관함</div>
-        <button className="ib" onClick={() => navigate('/me')} aria-label="내 정보">
-          <Icon name="user" /><span>내정보</span>
-        </button>
-        <SoundButton guide={guide} />
-      </div>
+      <Header
+        left="home"
+        title="보관함"
+        voiceText={guide}
+        right={<HeaderButton icon="user" label="내정보" onClick={() => navigate('/me')} />}
+      />
 
       <div className="body">
         {/* 검색창 */}
@@ -180,7 +168,6 @@ export default function Archive() {
         )}
       </div>
 
-      {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );
 }

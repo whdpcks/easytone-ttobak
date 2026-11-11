@@ -1,44 +1,39 @@
-/* useVoice — A 담당이 만들면 교체. 그 전까지 이 파일로 동작 */
-import { useCallback, useSyncExternalStore } from 'react';
+/* ─────────────────────────────────────────────
+   useVoice — 화면 음성 (A 담당, 팀 공용)
 
-/* 소리 켜짐/꺼짐은 앱 전체가 같은 값을 쓰고, 다시 열어도 유지합니다. */
-const STORAGE_KEY = 'ttobak-sound';
-const listeners = new Set();
-let soundOn = readSaved();
+   1) 화면 들어올 때 자동으로 읽기 + 나갈 때 멈춤
+        const voice = useVoice('보관함이에요. 찾고 싶은 종이를 말해 주세요.');
 
-function readSaved() {
-  try { return localStorage.getItem(STORAGE_KEY) !== 'off'; } catch { return true; }
-}
+   2) 원할 때 읽기 (D의 기존 사용법 그대로 동작)
+        const { speak, stop } = useVoice();
+        speak('준비물은 신분증이에요.');
 
-function subscribe(listener) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+   3) 소리 버튼은 공통 Header가 처리합니다. 직접 만들 때만:
+        <button onClick={voice.toggle}>소리</button>   // 읽는 중이면 멈춤, 아니면 다시 듣기
 
-function cancelSpeech() {
-  try { speechSynthesis.cancel(); } catch { /* 브라우저 미지원 */ }
-}
+   C의 결과 화면에는 announce={speak} 로 넘기면 됩니다.
+───────────────────────────────────────────── */
+import { useCallback, useEffect } from 'react';
+import { useVoiceContext } from '../common/VoiceContext';
 
-function setSoundOn(on) {
-  soundOn = on;
-  try { localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off'); } catch { /* 저장 불가 환경 */ }
-  if (!on) cancelSpeech();
-  listeners.forEach(l => l());
-}
+export default function useVoice(text, { auto = true } = {}) {
+  const v = useVoiceContext();
+  const { speak, stop } = v;
 
-export default function useVoice() {
-  const on = useSyncExternalStore(subscribe, () => soundOn);
+  useEffect(() => {
+    if (!auto || !text) return undefined;
+    speak(text);
+    return () => stop();
+  }, [auto, text, speak, stop]);
 
-  const speak = useCallback((text) => {
-    if (!text || !soundOn) return;
-    try {
-      speechSynthesis.cancel();
-      const ut = new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g, ''));
-      ut.lang = 'ko-KR';
-      ut.rate = 0.92;
-      speechSynthesis.speak(ut);
-    } catch { /* 브라우저 미지원 */ }
-  }, []);
+  const toggle = useCallback(() => v.toggle(text), [v, text]);
 
-  return { speak, stop: cancelSpeech, soundOn: on, setSoundOn };
+  return {
+    speak,
+    stop,
+    toggle,
+    replay: text ? () => speak(text) : v.replay,
+    speaking: v.speaking,
+    caption: v.caption,
+  };
 }

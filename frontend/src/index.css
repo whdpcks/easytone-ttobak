@@ -1,104 +1,9 @@
-/* 또박 디자인 토큰 — 프로토타입과 동일 */
-:root {
-  --paper: #FAFAF6;
-  --ink:   #161B2E;
-  --ink2:  #4A5066;
-  --rule:  #DDDCD3;
-  --red:   #D62839;
-  --red-soft: #FCE6E8;
-  --hl:    #FFE047;
-  --ok:    #1F8A5B;
+/* 공통 토큰·컴포넌트 스타일은 styles/common.css (A, App.jsx에서 불러옴)
+   각 담당 화면 전용 스타일은 이 파일 아래나 화면별 CSS에 추가하세요. */
 
-  --display: "Black Han Sans", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  --body:    "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+/* ═══════════ D: 보관함 · 결과 · 상세 ═══════════ */
 
-  --scale: 1;
-  font-size: calc(17px * var(--scale));
-}
-
-*, *::before, *::after { box-sizing: border-box; }
-
-html, body, #root {
-  margin: 0; padding: 0;
-  height: 100%;
-  background: #0B0D14; /* 폰 외부 색 */
-}
-
-body { font-family: var(--body); line-height: 1.5; color: var(--ink); }
-
-/* ── 앱 컨테이너 (프로토타입과 동일한 phone mock-up 없이 full-screen) ── */
-.app {
-  --paper: #FAFAF6; --ink: #161B2E; --ink2: #4A5066; --rule: #DDDCD3;
-  --red: #D62839; --red-soft: #FCE6E8; --hl: #FFE047; --ok: #1F8A5B;
-  font-size: calc(17px * var(--scale));
-  position: relative;
-  width: 100%; min-height: 100vh;
-  background: var(--paper);
-  color: var(--ink);
-  line-height: 1.5;
-}
-
-/* ── 헤더 ── */
-.hdr {
-  display: flex; align-items: center; gap: 6px;
-  padding: 16px 12px 10px;
-  position: sticky; top: 0;
-  background: var(--paper); z-index: 3;
-  border-bottom: 1px solid var(--rule);
-}
-.hdr .ttl {
-  flex: 1; min-width: 0;
-  font-weight: 700; font-size: 1.05em;
-  text-align: center; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
-
-/* ── 아이콘 버튼 (글씨, 소리, 뒤로 등) ── */
-.ib {
-  font: inherit; font-size: .72em; font-weight: 700;
-  background: #fff; color: var(--ink);
-  border: 2px solid var(--rule); border-radius: 14px;
-  min-width: 56px; min-height: 56px;
-  padding: 4px 6px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  cursor: pointer; flex: none;
-}
-.ib svg { width: 24px; height: 24px; }
-.ib .gg { font-family: var(--display); font-size: 1.5em; line-height: 1; letter-spacing: -.04em; }
-.ib .gg small { font-size: .65em; }
-.ib.speaking { border-color: var(--red); color: var(--red); }
-.ib.sound[aria-pressed="true"]  { color: #0F5A39; background: #E3F4EA; border-color: var(--ok); }
-.ib.sound[aria-pressed="false"] { color: #8A1120; background: var(--red-soft); border-color: var(--red); }
-.spacer { width: 56px; flex: none; }
-
-/* ── 스크롤 본문 ── */
-.body {
-  padding: 8px 20px 100px;
-  display: flex; flex-direction: column; gap: 14px;
-}
-
-/* ── 버튼 ── */
-.btn {
-  font: inherit; font-weight: 700; font-size: 1.05em;
-  min-height: 64px; border-radius: 18px; border: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 10px 16px; width: 100%;
-}
-.btn svg { width: 26px; height: 26px; }
-.btn.primary { background: var(--ink); color: #fff; }
-.btn.red     { background: var(--red); color: #fff; }
-.btn.line    { background: #fff; color: var(--ink); border: 2px solid var(--ink); }
-.btn.ghost   { background: transparent; color: var(--ink2); min-height: 52px; font-weight: 500; text-decoration: underline; }
-
-/* ── 카드 ── */
-.card {
-  background: #fff; border: 2px solid var(--rule); border-radius: 20px; padding: 18px;
-}
-
-/* ── SVG 기본 ── */
-svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-/* ── 보관함 — 검색창 ── */
+/* 보관함 — 검색창 */
 .search {
   display: flex; gap: 8px; align-items: center;
   background: #fff; border: 3px solid var(--ink); border-radius: 18px;
@@ -117,7 +22,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 }
 .search button.mic { background: var(--hl); color: var(--ink); }
 
-/* ── 추천 검색어 ── */
+/* 추천 검색어 */
 .sugg { display: flex; gap: 6px; flex-wrap: wrap; }
 .sugg button {
   font: inherit; font-size: .85em; font-weight: 700;
@@ -126,7 +31,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
   cursor: pointer; color: var(--ink2);
 }
 
-/* ── 카테고리 필터 ── */
+/* 카테고리 필터 */
 .cats {
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
   margin: 0 -20px; padding-inline: 20px; scrollbar-width: none;
@@ -138,7 +43,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 }
 .cats button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 
-/* ── AI 말풍선 ── */
+/* AI 말풍선 */
 .ai-say {
   display: flex; gap: 10px; align-items: flex-start;
   background: #FFF8CC; border-radius: 16px; padding: 12px 14px; font-size: .95em;
@@ -150,7 +55,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
   font-family: var(--display); font-size: .85em;
 }
 
-/* ── 문서 목록 ── */
+/* 문서 목록 */
 .list { display: flex; flex-direction: column; gap: 10px; }
 .row {
   display: flex; gap: 12px; align-items: center;
@@ -172,7 +77,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 }
 .why { display: block; margin-top: 2px; font-size: .75em; font-weight: 700; color: #8A6D00; }
 
-/* ── 로딩 shimmer ── */
+/* 로딩 shimmer */
 .shimmer {
   height: 76px; border-radius: 20px;
   background: linear-gradient(90deg, #eee 0, #f8f8f4 50%, #eee 100%);
@@ -182,12 +87,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 @keyframes sh { to { background-position: -200% 0; } }
 .empty { text-align: center; color: var(--ink2); padding: 20px 0; }
 
-/* ── 상세 화면 ── */
-h1.h {
-  font-size: 1.55em; line-height: 1.3; margin: 4px 0 2px; text-wrap: balance;
-}
-.sub { color: var(--ink2); margin: 0; }
-
+/* 상세 — 요약 */
 .sum-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .sum-list li { display: flex; gap: 12px; font-size: 1.12em; line-height: 1.55; }
 .num {
@@ -196,12 +96,7 @@ h1.h {
   display: grid; place-items: center; font-weight: 700; font-size: .85em; margin-top: 2px;
 }
 
-mark {
-  background: linear-gradient(transparent 40%, var(--hl) 40%, var(--hl) 94%, transparent 94%);
-  color: inherit; padding: 0 .08em;
-}
-
-/* 날짜 */
+/* 상세 — 날짜 */
 .cal { display: flex; gap: 16px; align-items: center; }
 .cal .day {
   width: 110px; flex: none; border-radius: 18px; overflow: hidden;
@@ -212,7 +107,7 @@ mark {
 .cal .day span { display: block; font-weight: 700; padding-bottom: 6px; }
 .dday { display: inline-block; background: var(--hl); font-weight: 700; padding: 2px 10px; border-radius: 8px; }
 
-/* 준비물 */
+/* 상세 — 준비물 */
 .check { display: flex; flex-direction: column; gap: 10px; }
 .check button {
   font: inherit; display: flex; gap: 14px; align-items: center; text-align: left;
@@ -230,12 +125,12 @@ mark {
 .check b { display: block; font-size: 1.1em; }
 .check small { color: var(--ink2); }
 
-/* 주의할 점 */
+/* 상세 — 주의할 점 */
 .warn { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .warn li { display: flex; gap: 12px; background: var(--red-soft); border-radius: 18px; padding: 14px; font-size: 1.08em; }
 .warn .num { background: var(--red); }
 
-/* 연락처 */
+/* 상세 — 연락처 */
 .tel {
   font-family: var(--display); font-size: 2.2em; letter-spacing: .02em;
   user-select: all; font-weight: 400;
@@ -266,15 +161,7 @@ mark {
 .tile.wide > div { flex: 1; min-width: 0; }
 .tile:active { transform: scale(.98); }
 
-/* 토스트 */
-.toast {
-  position: fixed; left: 16px; right: 16px; bottom: 24px; z-index: 100;
-  background: var(--ink); color: #fff; border-radius: 16px;
-  padding: 14px 16px; font-weight: 700; text-align: center;
-  animation: fadeup .25s;
-}
-@keyframes fadeup { from { transform: translateY(16px); opacity: 0; } }
-
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition: none !important; }
+  .shimmer { animation: none; }
+  .tile:active { transform: none; }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
-import SoundButton from '../components/SoundButton';
+import Header from '../common/Header';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { getDocument } from '../api/documents';
 import { formatDay, formatTime } from '../utils/datetime';
@@ -14,7 +14,6 @@ import { formatDay, formatTime } from '../utils/datetime';
 export default function Result() {
   const { docId } = useParams();
   const navigate = useNavigate();
-  const { speak } = useVoice();
 
   const [doc, setDoc] = useState(null);
   const [loadError, setLoadError] = useState(null);
@@ -31,9 +30,7 @@ export default function Result() {
 
   const intro = doc && `${doc.title}이에요. ${doc.summary[0]} 보고 싶은 내용을 눌러주세요.`;
 
-  useEffect(() => {
-    if (intro) speak(intro);
-  }, [intro]);
+  useVoice(intro);
 
   function goBack() { navigate(-1); }
 
@@ -54,13 +51,7 @@ export default function Result() {
 
   return (
     <div className="app">
-      <div className="hdr">
-        <button className="ib" onClick={goBack} aria-label="뒤로">
-          <Icon name="back" /><span>뒤로</span>
-        </button>
-        <div className="ttl" />
-        <SoundButton guide={intro} />
-      </div>
+      <Header left="back" voiceText={intro} />
 
       <div className="body">
         <div>

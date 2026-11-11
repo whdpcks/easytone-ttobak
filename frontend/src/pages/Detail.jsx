@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
-import SoundButton from '../components/SoundButton';
+import Header from '../common/Header';
 import { CAT_CONFIG, CATEGORIES } from '../utils/catConfig';
 import { getDocument, getDocuments } from '../api/documents';
 import { parseDate, daysUntil, formatTime } from '../utils/datetime';
@@ -15,7 +15,6 @@ import { parseDate, daysUntil, formatTime } from '../utils/datetime';
 export default function Detail() {
   const { docId, type } = useParams();
   const navigate = useNavigate();
-  const { speak } = useVoice();
 
   const [doc, setDoc] = useState(null);
   const [loadError, setLoadError] = useState(null);
@@ -31,10 +30,8 @@ export default function Detail() {
         : '이 문서를 찾지 못했어요.'));
   }, [docId]);
 
-  useEffect(() => {
-    if (!doc) return;
-    speak(voiceText(doc, type, checked));
-  }, [doc, type]);
+  const guide = doc ? voiceText(doc, type) : '';
+  useVoice(guide);
 
   function goBack() { navigate(-1); }
 
@@ -53,13 +50,7 @@ export default function Detail() {
 
   return (
     <div className="app">
-      <div className="hdr">
-        <button className="ib" onClick={goBack} aria-label="뒤로">
-          <Icon name="back" /><span>뒤로</span>
-        </button>
-        <div className="ttl">{doc.title}</div>
-        <SoundButton guide={voiceText(doc, type, checked)} />
-      </div>
+      <Header left="back" title={doc.title} voiceText={guide} />
 
       <div className="body">
         {type === 'summary'  && <SummaryScreen   doc={doc} />}
@@ -328,7 +319,7 @@ function CategoryScreen({ doc, navigate }) {
 /* ───────────────────────────────────────────
    음성 텍스트 생성
 ─────────────────────────────────────────── */
-function voiceText(doc, type, checked) {
+function voiceText(doc, type) {
   if (!doc) return '';
   switch (type) {
     case 'summary':
