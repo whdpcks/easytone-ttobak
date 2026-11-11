@@ -5,6 +5,8 @@ import useAutoCapture from './useAutoCapture'
 export default function App() {
   const videoRef = useRef(null)
   const guideRef = useRef(null)
+  const confirmationRef = useRef(null)
+  const [captureConfirmation, setCaptureConfirmation] = useState(false)
   const [autoCapture, setAutoCapture] = useState(true)
   const [awaitingNext, setAwaitingNext] = useState(false)
   const [status, setStatus] = useState('off')
@@ -31,6 +33,22 @@ export default function App() {
       photoUrls.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
+
+  useEffect(() => {
+    const dialog = confirmationRef.current
+    if (captureConfirmation && !dialog.open) dialog.showModal()
+    if (!captureConfirmation && dialog.open) dialog.close()
+  }, [captureConfirmation])
+
+  function nextDocument() {
+    setCaptureConfirmation(false)
+    setAwaitingNext(false)
+  }
+
+  function finishCapture() {
+    setCaptureConfirmation(false)
+    savePhotos()
+  }
 
   async function startCamera() {
     const video = videoRef.current
@@ -101,6 +119,7 @@ export default function App() {
       ])
       setSaved(false)
       setAwaitingNext(true)
+      setCaptureConfirmation(true)
     }, 'image/jpeg', 0.95)
   }
 
@@ -128,7 +147,9 @@ export default function App() {
   let cameraHint = '카메라를 켜고 종이를 빨간 테두리 안에 맞춰주세요.'
   if (status === 'on') cameraHint = autoCapture ? hints[detection.state] : '종이를 맞추고 직접 찍기를 눌러주세요.'
   if (capturing) cameraHint = '사진을 찍고 있어요.'
-  if (awaitingNext && !capturing) cameraHint = '찍었어요. 다음 종이를 준비하고 다음 서류를 눌러주세요.'
+  if (awaitingNext && !capturing) cameraHint = '찍었어요. 끝내거나 다음 서류를 찍을 수 있어요.'
+  if (saving) cameraHint = '찍은 사진을 저장하고 있어요.'
+  if (saved) cameraHint = '찍은 사진을 저장했어요.'
 
   async function savePhotos() {
     if (photos.length === 0 || busy.current || saved) return
@@ -171,12 +192,12 @@ export default function App() {
 
   return (
     <main>
-      <h1>문서 촬영</h1>
       <button type="button" onClick={startCamera} disabled={status !== 'off'}>
         {{ off: '카메라 켜기', opening: '카메라 여는 중', on: '카메라 켜짐' }[status]}
       </button>
       {error && <p role="alert">{error}</p>}
       <div className="camera-preview">
+        <h1 className="camera-title">문서 촬영</h1>
         <video
           ref={videoRef}
           autoPlay
@@ -195,6 +216,21 @@ export default function App() {
             className={`a4-guide${autoCapture && !awaitingNext && detection.state === 'steady' ? ' is-ready' : ''}`}
           />
         </div>
+        <dialog
+          ref={confirmationRef}
+          className="capture-confirmation"
+          aria-labelledby="capture-confirmation-title"
+          onCancel={(event) => event.preventDefault()}
+        >
+          <h2 id="capture-confirmation-title">{photos.length}장 찍었어요</h2>
+          {photos.length > 0 && (
+            <img className="confirmation-thumbnail" src={photos[photos.length - 1].url} alt="방금 찍은 문서" />
+          )}
+          <div className="confirmation-actions">
+            <button type="button" onClick={nextDocument}>다음 서류</button>
+            <button type="button" onClick={finishCapture}>끝내기</button>
+          </div>
+        </dialog>
       </div>
       <p className="camera-hint" role="status">{cameraHint}</p>
       {status === 'on' && autoCapture && !awaitingNext && (
@@ -205,11 +241,6 @@ export default function App() {
           <input type="checkbox" checked={autoCapture} onChange={(event) => setAutoCapture(event.target.checked)} />
           자동 촬영
         </label>
-        {awaitingNext && (
-          <button type="button" onClick={() => setAwaitingNext(false)} disabled={saving || capturing}>
-            다음 서류
-          </button>
-        )}
       </div>
       <button type="button" onClick={takePhoto} disabled={status !== 'on' || saving || capturing}>
         직접 찍기
@@ -228,13 +259,11 @@ export default function App() {
               <p>{index + 1}장째 · {photo.width} × {photo.height}px</p>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={savePhotos}
-            disabled={saving || saved || capturing}
-          >
-            {saving ? '저장하는 중' : saved ? '사진 저장 완료' : '사진 모두 저장'}
-          </button>
+          {error && !saved && !captureConfirmation && (
+            <button type="button" onClick={savePhotos} disabled={saving || capturing}>
+              {saving ? '저장하는 중' : '다시 저장'}
+            </button>
+          )}
         </section>
       )}
     </main>

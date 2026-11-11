@@ -93,3 +93,75 @@
   stroke-width: 2px;
   vector-effect: non-scaling-stroke;
 }
+
+.camera-title {
+  position: absolute;
+  top: 4px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  margin: 0;
+  font-size: clamp(16px, 4vw, 22px);
+  line-height: 1.2;
+  font-weight: 750;
+  color: #ff4545;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.capture-confirmation {
+  width: min(360px, calc(100vw - 40px));
+  max-height: calc(100svh - 48px);
+  box-sizing: border-box;
+  padding: 24px;
+  overflow: auto;
+  border: 0;
+  border-radius: 18px;
+  background: #fffdf7;
+  color: #1d2940;
+  text-align: center;
+  box-shadow: 0 16px 60px rgb(0 0 0 / 35%);
+}
+
+.capture-confirmation::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+
+.capture-confirmation h2 {
+  margin: 0 0 16px;
+  color: #1d2940;
+  font-size: 24px;
+  font-weight: 750;
+}
+
+.confirmation-thumbnail {
+  display: block;
+  width: 100%;
+  max-height: min(35svh, 240px);
+  object-fit: contain;
+  margin: 0 auto 20px;
+}
+
+.confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.confirmation-actions button {
+  flex: 1 1 120px;
+  min-height: 56px;
+  padding: 12px;
+  border: 1px solid #1d2940;
+  border-radius: 10px;
+  background: #fffdf7;
+  color: #1d2940;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.confirmation-actions button:last-child {
+  background: #1d2940;
+  color: #fff;
+}
