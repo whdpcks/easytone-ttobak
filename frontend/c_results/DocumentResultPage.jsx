@@ -98,8 +98,9 @@ export default function DocumentResultPage({
                   className="ttobak-c-result__tile"
                   key={tile.key}
                   type="button"
+                  onClick={() => onOpenDetail?.(documentId, tile.key)}
                   aria-label={`${tile.label}, 자세히 보기`}
-                  disabled
+                  disabled={typeof onOpenDetail !== 'function'}
                 >
                   <span className="ttobak-c-result__icon" aria-hidden="true">{tile.icon}</span>
                   <span className="ttobak-c-result__tile-text">
