@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from common import auth
+from common import auth, tts
 from common.db import db_path, init_db
 
 load_dotenv()
@@ -46,8 +46,9 @@ def health():
 
 # ── 라우터 연결 ────────────────────────────────────────────
 
-# A: 로그인 · 회원가입 · 내 정보
+# A: 로그인 · 회원가입 · 내 정보 · 가족, 음성 합성
 app.include_router(auth.router)
+app.include_router(tts.router)
 
 # B: 촬영·업로드 (documents 생성 시 user_id 저장 필요 → common.auth.get_current_user)
 # from b_capture.router import router as capture_router

@@ -20,11 +20,20 @@ export const RATES = [
   { value: 0.92, label: '보통' },
   { value: 1.05, label: '빠르게' },
 ];
+/* 사용할 말 — label: 그 나라 글자(외국인이 바로 알아보게), ko: 한국어 이름, hello: 시작 화면 인사 */
 export const LANGS = [
-  { value: 'ko', label: '한국어' },
-  { value: 'en', label: 'English' },
-  { value: 'zh', label: '中文' },
-  { value: 'vi', label: 'Tiếng Việt' },
+  { value: 'ko', label: '한국어', ko: '한국어', hello: '안녕하세요' },
+  { value: 'en', label: 'English', ko: '영어', hello: 'Hello' },
+  { value: 'zh', label: '中文', ko: '중국어', hello: '你好' },
+  { value: 'ja', label: '日本語', ko: '일본어', hello: 'こんにちは' },
+  { value: 'vi', label: 'Tiếng Việt', ko: '베트남어', hello: 'Xin chào' },
+  { value: 'th', label: 'ภาษาไทย', ko: '태국어', hello: 'สวัสดี' },
+  { value: 'id', label: 'Bahasa Indonesia', ko: '인도네시아어', hello: 'Halo' },
+  { value: 'fil', label: 'Filipino', ko: '필리핀어', hello: 'Kumusta' },
+  { value: 'km', label: 'ភាសាខ្មែរ', ko: '캄보디아어', hello: 'សួស្តី' },
+  { value: 'my', label: 'မြန်မာဘာသာ', ko: '미얀마어', hello: 'မင်္ဂလာပါ' },
+  { value: 'hi', label: 'हिन्दी', ko: '힌디어(인도)', hello: 'नमस्ते' },
+  { value: 'ne', label: 'नेपाली', ko: '네팔어', hello: 'नमस्ते' },
 ];
 
 const pick = (list, v, fallback) => (list.some(x => x.value === v) ? v : fallback);

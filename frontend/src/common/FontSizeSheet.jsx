@@ -20,7 +20,7 @@ export default function FontSizeSheet({ onClose }) {
             aria-pressed={scale === s.value}
             onClick={() => { setScale(s.value); speak(`${s.label}로 바꿨어요.`); }}
           >
-            <span className="gg" style={{ fontSize: `${PREVIEW[s.value]}em` }}>가</span>
+            <span className="gg" aria-hidden="true" style={{ fontSize: `${PREVIEW[s.value]}em` }}>가</span>
             <b style={{ fontSize: `${s.value}em` }}>{s.label}</b>
             {scale === s.value && <Icon name="check" className="ck" />}
           </button>

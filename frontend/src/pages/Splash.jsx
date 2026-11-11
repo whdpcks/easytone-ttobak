@@ -1,52 +1,62 @@
-/* 시작 화면 (A) — 언어 선택, 시작하기(여기서 소리가 풀림) */
+/* 시작 화면 (A) — 여러 나라 인사 + "찍으면 → 쉬운 말로 → 읽어드려요" 3단계 소개 */
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
-import { LANGS, useSettings } from '../common/SettingsContext';
-import { useUI } from '../common/UIContext';
+import { LANGS } from '../common/SettingsContext';
 import { useVoiceContext } from '../common/VoiceContext';
 import useVoice from '../hooks/useVoice';
+import Icon from '../utils/icons';
 import { getToken } from '../api/client';
 
-const VOICE = '안녕하세요. 또박입니다. 어려운 종이, 또박또박 읽어드릴게요. 시작하기를 눌러주세요.';
+const VOICE = '안녕하세요. 또박입니다. 종이를 찍으면, 중요한 것만 쉬운 말로 바꿔서 읽어드려요. 처음이면 시작하기를 눌러주세요.';
+
+const HOW = [
+  { icon: 'camera', title: '종이를 찍으면', desc: '안내문, 고지서, 계약서 무엇이든' },
+  { icon: 'mark', title: '중요한 것만 쉬운 말로', desc: '날짜, 준비물, 주의할 점을 골라서' },
+  { icon: 'speaker', title: '소리 내어 읽어드려요', desc: '글씨도 크게, 몇 번이든 다시' },
+];
 
 export default function Splash() {
   const navigate = useNavigate();
-  const { lang, setLang } = useSettings();
   const { unlock } = useVoiceContext();
-  const { toast } = useUI();
+  const [hello, setHello] = useState(0);
+  const [active, setActive] = useState(0);
   useVoice(VOICE);
 
-  const chooseLang = (v) => {
-    setLang(v);
-    if (v !== 'ko') toast('지금은 한국어로 안내해요. 결과를 고른 말로 보여주는 기능은 준비 중이에요.');
-  };
+  useEffect(() => {
+    const t1 = setInterval(() => setHello(i => (i + 1) % LANGS.length), 1800);
+    const t2 = setInterval(() => setActive(i => (i + 1) % HOW.length), 2200);
+    return () => { clearInterval(t1); clearInterval(t2); };
+  }, []);
 
-  const start = () => {
-    unlock();
-    navigate(getToken() ? '/home' : '/login');
-  };
+  const go = (path) => { unlock(); navigate(getToken() ? '/home' : path); };
 
   return (
     <div className="app">
       <Header left="none" voiceText={VOICE} />
-      <main className="body" style={{ justifyContent: 'center', textAlign: 'center', gap: 22 }}>
-        <div style={{ isolation: 'isolate', paddingTop: 30 }}>
-          <span className="logo">또박</span>
+      <main className="body splash">
+        <div className="hello" aria-hidden="true">
+          <span key={hello} lang={LANGS[hello].value}>{LANGS[hello].hello}</span>
         </div>
-        <p style={{ fontSize: '1.25em', fontWeight: 700, margin: 0 }}>
-          어려운 종이,<br />또박또박 읽어드려요
-        </p>
-        <div>
-          <p className="sub" style={{ marginBottom: 8 }}>사용할 말을 고르세요</p>
-          <div className="chips">
-            {LANGS.map(l => (
-              <button key={l.value} className="chip" aria-pressed={lang === l.value} onClick={() => chooseLang(l.value)}>
-                {l.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button className="btn red" onClick={start}>시작하기</button>
+        <div className="logo-wrap"><span className="logo">또박</span></div>
+        <p className="tagline">어려운 종이,<br />또박또박 읽어드려요</p>
+
+        <ol className="how">
+          {HOW.map((h, i) => (
+            <li key={h.title} className={i === active ? 'on' : ''}>
+              <span className="how-ic">
+                {h.icon === 'mark'
+                  ? <span className="mark-ic" aria-hidden="true">가</span>
+                  : <Icon name={h.icon} />}
+              </span>
+              <span className="how-tx"><b>{h.title}</b><small>{h.desc}</small></span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="grow" />
+        <button className="btn red" onClick={() => go('/signup')}>시작하기</button>
+        <button className="btn line" onClick={() => go('/login')}>이미 가입했어요 · 로그인</button>
       </main>
     </div>
   );

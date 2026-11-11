@@ -8,7 +8,8 @@
    - left="back"  → 기본 동작은 이전 화면 (onLeft로 바꿀 수 있음)
    - left="close" → onLeft 필수 (예: B 카메라에서 "버릴까요?" 확인)
    - voiceText 를 안 주면 소리 버튼은 마지막으로 읽은 문장을 다시 읽습니다
-   - dark: 카메라처럼 어두운 화면이면 <div className="app dark"> 안에 두면 됩니다
+   - 제목은 화면 정가운데에 놓입니다. (오른쪽에 버튼을 더 넣으면 남은 자리 가운데)
+   - 어두운 화면(카메라)은 <div className="app dark"> 안에 두면 됩니다
 ───────────────────────────────────────────── */
 import { useNavigate } from 'react-router-dom';
 import Icon from '../utils/icons';
@@ -42,25 +43,27 @@ export default function Header({ left = 'back', onLeft, title = '', voiceText, r
   });
 
   return (
-    <header className="hdr">
-      {LEFT[left]
-        ? <HeaderButton icon={LEFT[left].icon} label={LEFT[left].label} onClick={handleLeft} />
-        : <span className="spacer" />}
+    <header className={`hdr${right ? '' : ' centered'}`}>
+      <div className="hdr-l">
+        {LEFT[left] && <HeaderButton icon={LEFT[left].icon} label={LEFT[left].label} onClick={handleLeft} />}
+      </div>
 
       <div className="ttl">{title}</div>
 
-      <HeaderButton label="글씨" onClick={openFontSheet} aria-label="글씨 크기">
-        <span className="gg" aria-hidden="true">가<small>가</small></span>
-      </HeaderButton>
-      <HeaderButton
-        icon="speaker"
-        label={speaking ? '멈춤' : '소리'}
-        className={speaking ? 'speaking' : ''}
-        onClick={() => toggle(voiceText)}
-        aria-label={speaking ? '읽기 멈추기' : '다시 듣기'}
-        aria-pressed={speaking}
-      />
-      {right}
+      <div className="hdr-r">
+        <HeaderButton label="글씨" onClick={openFontSheet} aria-label="글씨 크기">
+          <span className="gg" aria-hidden="true">가<small>가</small></span>
+        </HeaderButton>
+        <HeaderButton
+          icon="speaker"
+          label={speaking ? '멈춤' : '소리'}
+          className={speaking ? 'speaking' : ''}
+          onClick={() => toggle(voiceText)}
+          aria-label={speaking ? '읽기 멈추기' : '다시 듣기'}
+          aria-pressed={speaking}
+        />
+        {right}
+      </div>
     </header>
   );
 }

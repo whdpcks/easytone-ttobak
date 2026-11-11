@@ -29,9 +29,29 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at  TEXT    NOT NULL
 );
+
+-- 문자 인증번호 (전화번호당 1개, 새로 받으면 덮어씀)
+CREATE TABLE IF NOT EXISTS phone_codes (
+    phone       TEXT    PRIMARY KEY,
+    code_hash   TEXT    NOT NULL,
+    expires_at  REAL    NOT NULL,
+    attempts    INTEGER NOT NULL DEFAULT 0,
+    sent_at     REAL    NOT NULL
+);
+
+-- 가족과 함께 보기
+CREATE TABLE IF NOT EXISTS family_members (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    relation    TEXT    NOT NULL,
+    name        TEXT    NOT NULL,
+    phone       TEXT    NOT NULL,
+    created_at  TEXT    NOT NULL
+);
 """
 
 DEMO_USER = {"name": "김순자", "phone": "01012345678", "language": "ko", "font_scale": 1.25}
+DEMO_FAMILY = {"relation": "딸", "name": "김미영", "phone": "01098765432"}
 
 
 def db_path() -> Path:
@@ -61,7 +81,7 @@ def connect():
 
 
 def init_db(seed_demo: bool | None = None) -> None:
-    """테이블을 만들고, 시연용 사용자(간편 로그인)를 넣습니다."""
+    """테이블을 만들고, 시연용 사용자(체험하기 버튼)와 가족 1명을 넣습니다."""
     if seed_demo is None:
         seed_demo = os.getenv("TTOBAK_SEED_DEMO", "1") == "1"
     with connect() as conn:
@@ -72,3 +92,11 @@ def init_db(seed_demo: bool | None = None) -> None:
                 "VALUES (:name, :phone, :language, :font_scale, :created_at)",
                 {**DEMO_USER, "created_at": utc_now()},
             )
+            demo_id = conn.execute("SELECT id FROM users WHERE phone = ?", (DEMO_USER["phone"],)).fetchone()[0]
+            has_family = conn.execute("SELECT 1 FROM family_members WHERE user_id = ?", (demo_id,)).fetchone()
+            if not has_family:
+                conn.execute(
+                    "INSERT INTO family_members (user_id, relation, name, phone, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (demo_id, DEMO_FAMILY["relation"], DEMO_FAMILY["name"], DEMO_FAMILY["phone"], utc_now()),
+                )
