@@ -5,6 +5,7 @@ export const CAT_CONFIG = {
   '학교·아이': { c: '#2E7D1E', s: '#E4F3DF', icon: 'school' },
   '나라·복지': { c: '#6B3FA8', s: '#EEE5F8', icon: 'gov'   },
   '비자·체류': { c: '#24407A', s: '#E2E8F4', icon: 'globe' },
+  '기타':      { c: '#4A5066', s: '#ECECE6', icon: 'doc'   },
 };
 
 export const CATEGORIES = ['전체', ...Object.keys(CAT_CONFIG)];

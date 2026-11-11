@@ -16,12 +16,17 @@ export default function Detail() {
   const { speak } = useVoice();
 
   const [doc, setDoc] = useState(null);
+  const [loadError, setLoadError] = useState(null);
   const [checked, setChecked] = useState({});
 
   useEffect(() => {
+    setDoc(null);
+    setLoadError(null);
     getDocument(docId)
       .then(setDoc)
-      .catch(e => console.error(e));
+      .catch(e => setLoadError(e.status === 409
+        ? '아직 종이를 읽고 있어요. 잠시 뒤에 다시 열어주세요.'
+        : '이 문서를 찾지 못했어요.'));
   }, [docId]);
 
   useEffect(() => {
@@ -29,9 +34,20 @@ export default function Detail() {
     speak(voiceText(doc, type, checked));
   }, [doc, type]);
 
-  if (!doc) return <div className="app"><div className="body" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--ink2)' }}>불러오는 중…</div></div>;
-
   function goBack() { navigate(-1); }
+
+  if (loadError) {
+    return (
+      <div className="app">
+        <div className="body" style={{ paddingTop: 40, textAlign: 'center' }}>
+          <p className="sub">{loadError}</p>
+          <button className="btn line" onClick={goBack}>뒤로 가기</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!doc) return <div className="app"><div className="body" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--ink2)' }}>불러오는 중…</div></div>;
 
   return (
     <div className="app">
@@ -69,10 +85,10 @@ function SummaryScreen({ doc }) {
       <h1 className="h">한눈에 보기</h1>
       <div className="card">
         <ol className="sum-list">
-          {doc.summary?.map((s, i) => (
+          {doc.summary.map((s, i) => (
             <li key={i}>
               <span className="num">{i + 1}</span>
-              <span dangerouslySetInnerHTML={{ __html: s }} />
+              <span>{s}</span>
             </li>
           ))}
         </ol>
@@ -88,25 +104,23 @@ function DateTimeScreen({ doc }) {
   const dt = doc.datetime;
   if (!dt) return <p className="sub">날짜 정보가 없어요.</p>;
 
-  const dateObj = dt.date ? new Date(dt.date) : null;
-  const today   = new Date();
-  const dday    = dateObj ? Math.ceil((dateObj - today) / 86400000) : null;
-  const month   = dateObj?.getMonth() + 1;
-  const day     = dateObj?.getDate();
-  const weekday = dateObj?.toLocaleDateString('ko-KR', { weekday: 'short' });
+  const dateObj = dt.date ? parseDate(dt.date) : null;
+  const dday    = dateObj ? daysUntil(dateObj) : null;
 
   return (
     <>
       <h1 className="h">{dt.label || '날짜·시간'}</h1>
       <div className="card">
         <div className="cal">
-          <div className="day">
-            <small>{month}월</small>
-            <b>{day}</b>
-            <span>{weekday}</span>
-          </div>
+          {dateObj && (
+            <div className="day">
+              <small>{dateObj.getMonth() + 1}월</small>
+              <b>{dateObj.getDate()}</b>
+              <span>{dateObj.toLocaleDateString('ko-KR', { weekday: 'short' })}</span>
+            </div>
+          )}
           <div>
-            <b style={{ fontSize: '1.35em', lineHeight: 1.3 }}>{dt.time || '하루 종일'}</b>
+            <b style={{ fontSize: '1.35em', lineHeight: 1.3 }}>{formatTime(dt.time) || '하루 종일'}</b>
             <br />
             {dday !== null && (
               <span className="dday">
@@ -142,11 +156,13 @@ function PlaceScreen({ doc }) {
 
   return (
     <>
-      <h1 className="h">{pl.name}</h1>
-      <div className="card">
-        <p style={{ margin: '0 0 6px', fontWeight: 700 }}>주소</p>
-        <p style={{ margin: 0, fontSize: '1.1em', userSelect: 'all' }}>{pl.address}</p>
-      </div>
+      <h1 className="h">{pl.name || '가야 할 곳'}</h1>
+      {pl.address && (
+        <div className="card">
+          <p style={{ margin: '0 0 6px', fontWeight: 700 }}>주소</p>
+          <p style={{ margin: 0, fontSize: '1.1em', userSelect: 'all' }}>{pl.address}</p>
+        </div>
+      )}
       {pl.note && (
         <div className="card">
           <p style={{ margin: 0, fontSize: '1.08em' }}>{pl.note}</p>
@@ -210,7 +226,7 @@ function CautionsScreen({ doc }) {
         {cautions.map((c, i) => (
           <li key={i}>
             <span className="num" style={{ background: 'var(--red)' }}>{i + 1}</span>
-            <span dangerouslySetInnerHTML={{ __html: c }} />
+            <span>{c}</span>
           </li>
         ))}
       </ol>
@@ -229,15 +245,17 @@ function ContactScreen({ doc }) {
     <>
       <h1 className="h">궁금하면 전화하세요</h1>
       <div className="card">
-        <p className="sub" style={{ margin: 0 }}>{ct.name}</p>
-        <div className="tel">{ct.phone}</div>
+        {ct.name && <p className="sub" style={{ margin: 0 }}>{ct.name}</p>}
+        {ct.phone && <div className="tel">{ct.phone}</div>}
       </div>
-      <button
-        className="btn primary"
-        onClick={() => { window.location.href = `tel:${ct.phone.replace(/[^0-9]/g, '')}`; }}
-      >
-        <Icon name="phone" />전화 걸기
-      </button>
+      {ct.phone && (
+        <button
+          className="btn primary"
+          onClick={() => { window.location.href = `tel:${ct.phone.replace(/[^0-9]/g, '')}`; }}
+        >
+          <Icon name="phone" />전화 걸기
+        </button>
+      )}
     </>
   );
 }
@@ -291,7 +309,7 @@ function CategoryScreen({ doc, navigate }) {
                 <span className="ri"><Icon name={cfg.icon} size={28} /></span>
                 <div className="rt">
                   <b>{d.title}</b>
-                  <small>{d.sender} · {d.created_at?.slice(0, 10).replace(/-/g, '.')}</small>
+                  <small>{[d.sender, d.created_at.replace(/-/g, '.')].filter(Boolean).join(' · ')}</small>
                 </div>
                 <button
                   className="open"
@@ -310,36 +328,60 @@ function CategoryScreen({ doc, navigate }) {
 /* ───────────────────────────────────────────
    음성 텍스트 생성
 ─────────────────────────────────────────── */
-function strip(s) { return (s || '').replace(/<[^>]+>/g, ''); }
+/* C 규격: date "YYYY-MM-DD", time "HH:MM" (24시간) */
+function parseDate(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function daysUntil(date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((date - today) / 86400000);
+}
+
+function formatTime(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}시${m ? ` ${m}분` : ''}`;
+}
 
 function voiceText(doc, type, checked) {
   if (!doc) return '';
   switch (type) {
     case 'summary':
-      return '문서 요약이에요. ' + (doc.summary || []).map(strip).join(' ');
+      return '문서 요약이에요. ' + doc.summary.join(' ');
     case 'datetime': {
       const dt = doc.datetime;
       if (!dt) return '날짜 정보가 없어요.';
-      const dateObj = dt.date ? new Date(dt.date) : null;
-      const today = new Date();
-      const dday = dateObj ? Math.ceil((dateObj - today) / 86400000) : null;
-      return `${dt.label}은 ${dt.date?.replace(/-/g, '년 ').replace(/-/g, '월 ')}일 ${dt.time || ''}이에요.${dday !== null ? ` ${dday}일 남았어요.` : ''} ${dt.note || ''}`;
+      const dateObj = dt.date ? parseDate(dt.date) : null;
+      const when = [
+        dateObj && `${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`,
+        formatTime(dt.time),
+      ].filter(Boolean).join(' ');
+      const dday = dateObj ? daysUntil(dateObj) : null;
+      return [
+        `${dt.label || '날짜'}는 ${when}이에요.`,
+        dday > 0 && `${dday}일 남았어요.`,
+        dt.note,
+        dt.check && '종이를 한 번 더 확인해주세요.',
+      ].filter(Boolean).join(' ');
     }
     case 'place': {
       const pl = doc.place;
       if (!pl) return '장소 정보가 없어요.';
-      return `장소는 ${pl.name}이에요. ${pl.note || ''}`;
+      return [pl.name && `장소는 ${pl.name}이에요.`, pl.address, pl.note].filter(Boolean).join(' ');
     }
     case 'items': {
       const items = doc.items || [];
       return `챙길 것은 ${items.length}가지예요. ${items.map(i => i.name).join(', ')}.`;
     }
     case 'cautions':
-      return '주의할 점이에요. ' + (doc.cautions || []).map((c, i) => `${i + 1}번, ${strip(c)}`).join(' ');
+      return '주의할 점이에요. ' + (doc.cautions || []).map((c, i) => `${i + 1}번, ${c}`).join(' ');
     case 'contact': {
       const ct = doc.contact;
-      if (!ct) return '연락처 정보가 없어요.';
-      return `${ct.name}, 전화번호는 ${ct.phone.split('').join(' ')}이에요.`;
+      if (!ct?.phone) return '연락처 정보가 없어요.';
+      return `${ct.name ? `${ct.name}, ` : ''}전화번호는 ${ct.phone.split('').join(' ')}이에요.`;
     }
     case 'category':
       return `이 종이는 ${doc.category} 종류예요.`;

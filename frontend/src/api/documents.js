@@ -11,7 +11,11 @@ async function request(path, options = {}) {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     ...options,
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(`HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 
@@ -23,7 +27,7 @@ export async function getDocuments({ category } = {}) {
   return request(`/documents${qs}`);
 }
 
-/** 문서 단건  GET /documents/:id */
+/** 문서 단건  GET /documents/:id — C의 결과 API (분석 중 409, 없으면 404) */
 export async function getDocument(id) {
   return request(`/documents/${id}`);
 }

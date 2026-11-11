@@ -8,10 +8,8 @@ D 담당 — GET /search?q=검색어  → [{id, reason, doc}]
   3. LLM 호출 실패 시 플랜 B: 카테고리 동의어 사전으로 키워드 검색
 """
 import os, json, re
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from database import get_db
-from models import Document
+from fastapi import APIRouter
+from database import completed_documents
 from openai import OpenAI
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -57,7 +55,7 @@ def keyword_search(q: str, docs: list[dict]) -> list[dict]:
             results.append({"id": d["id"], "reason": reason, "doc": d})
             continue
         # 제목·요약 키워드 매칭
-        text = (d.get("title", "") + " " + " ".join(d.get("summary") or [])).lower()
+        text = (d["title"] + " " + " ".join(d["summary"])).lower()
         if any(h.lower() in text for h in hints) or q_norm.lower() in text:
             reason = "검색어와 관련된 내용이 있어요."
             results.append({"id": d["id"], "reason": reason, "doc": d})
@@ -79,7 +77,7 @@ def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
     summary_list = json.dumps(
         [{"id": d["id"], "title": d["title"],
           "category": d["category"],
-          "summary": (d.get("summary") or [""])[0]}
+          "summary": d["summary"][0]}
          for d in doc_list],
         ensure_ascii=False
     )
@@ -111,16 +109,9 @@ def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
 
 
 @router.get("")
-def search(q: str, db: Session = Depends(get_db)):
-    """AI 검색 — [{id, reason, doc}]"""
-    docs_orm = db.query(Document).filter(Document.status == "done").all()
-    doc_list = []
-    for d in docs_orm:
-        entry = {"id": d.id, "title": d.title, "sender": d.sender,
-                 "category": d.category,
-                 "created_at": d.created_at.isoformat() if d.created_at else None}
-        entry.update(d.fields_dict)
-        doc_list.append(entry)
+def search(q: str):
+    """AI 검색 — [{id, reason, doc}], doc은 C의 결과 JSON 그대로"""
+    doc_list = completed_documents()
 
     if not doc_list:
         return []

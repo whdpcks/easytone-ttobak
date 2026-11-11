@@ -261,7 +261,7 @@ function DocRow({ doc, why, onOpen }) {
       </span>
       <div className="rt">
         <b>{doc.title}</b>
-        <small>{doc.sender} · {doc.created_at?.slice(0, 10).replace(/-/g, '.')}</small>
+        <small>{[doc.sender, doc.created_at.replace(/-/g, '.')].filter(Boolean).join(' · ')}</small>
         {why && <span className="why">{why}</span>}
       </div>
       <button className="open" onClick={onOpen} aria-label={`${doc.title} 보기`}>
