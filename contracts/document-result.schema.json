@@ -14,7 +14,7 @@
     "category": {
       "enum": ["병원·건강", "일·직장", "돈·요금", "학교·아이", "나라·복지", "비자·체류", "기타"]
     },
-    "created_at": { "type": "string", "format": "date" },
+    "created_at": { "type": "string", "format": "date", "description": "C에서 분석 결과를 생성한 날짜(한국 시간). B의 문서 촬영·보관일과 구별한다." },
     "summary": {
       "type": "array", "minItems": 1, "maxItems": 3,
       "items": { "type": "string", "minLength": 1 }
