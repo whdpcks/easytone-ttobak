@@ -18,6 +18,7 @@ export default function App() {
   const [capturing, setCapturing] = useState(false)
   const photoUrls = useRef([])
   const documentId = useRef(null)
+  const clientDocumentId = useRef(null)
   const uploadedPhotos = useRef(new Set())
   const busy = useRef(false)
   const mounted = useRef(false)
@@ -121,7 +122,7 @@ export default function App() {
       photoUrls.current.push(url)
       setPhotos((previous) => [
         ...previous,
-        { blob, url, width: canvas.width, height: canvas.height },
+        { blob, url, clientId: crypto.randomUUID(), width: canvas.width, height: canvas.height },
       ])
       setSaved(false)
       setAwaitingNext(true)
@@ -170,7 +171,12 @@ export default function App() {
     try {
       // 여러 장을 같은 문서에 저장할 수 있도록 문서 번호를 기억한다.
       if (documentId.current === null) {
-        const response = await fetch('/documents', { method: 'POST' })
+        clientDocumentId.current ??= crypto.randomUUID()
+        const response = await fetch('/documents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_document_id: clientDocumentId.current }),
+        })
         if (!response.ok) throw new Error('문서를 만들지 못했어요.')
         const { id } = await response.json()
         documentId.current = id
@@ -183,6 +189,7 @@ export default function App() {
 
         const form = new FormData()
         form.append('file', photo.blob, `capture-${index + 1}.jpg`)
+        if (photo.clientId) form.append('client_page_id', photo.clientId)
         const response = await fetch(`/documents/${documentId.current}/pages`, {
           method: 'POST',
           body: form,
@@ -192,6 +199,8 @@ export default function App() {
       }
 
       setUploadStep(2)
+      const finishResponse = await fetch(`/documents/${documentId.current}/finish`, { method: 'POST' })
+      if (!finishResponse.ok) throw new Error('분석을 요청하지 못했어요.')
       if (!mounted.current) return
       setSaved(true)
       setProcessing('completed')
@@ -242,7 +251,7 @@ export default function App() {
             completed={processing === 'completed'}
             title="종이 보관 중"
             heading={'찍은 사진을\n보관하고 있어요'}
-            steps={['문서 준비', '사진 저장', '보관 마무리']}
+            steps={['문서 준비', '사진 저장', '분석 요청']}
             onStampFinished={() => setProcessing(null)}
           />
         )}
