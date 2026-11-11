@@ -30,6 +30,11 @@ export function splitSentences(text) {
   return t.split(/(?<=[.!?])\s+|(?<=[。？！।။។])\s*(?=\S)/u).map(s => s.trim()).filter(Boolean);
 }
 
+/** 목소리 빠르기 설정(천천히 1.05 / 보통 1.25 / 빠르게 1.45)은 한국어 기준.
+    외국어는 1.25배가 빠르게 들려서, 보통 = 1배가 되도록 나눠서 씀. */
+export const effectiveRate = (rate, lang) =>
+  lang === 'ko' ? rate : Math.round((rate / 1.25) * 100) / 100;
+
 export const ttsUrl = (text, { lang = 'ko', rate = 1.25 } = {}) =>
   `${API_BASE}/tts?${new URLSearchParams({ text, lang, rate: String(rate) })}`;
 
@@ -96,7 +101,7 @@ export function VoiceProvider({ children }) {
         const u = new SpeechSynthesisUtterance(s);
         u.lang = BCP47[langRef.current] || 'ko-KR';
         if (voiceRef.current) u.voice = voiceRef.current;
-        u.rate = Math.min(rateRef.current, 1.3);  // 브라우저 음성은 빠르면 알아듣기 어려움
+        u.rate = Math.min(effectiveRate(rateRef.current, langRef.current), 1.3);  // 브라우저 음성은 빠르면 알아듣기 어려움
         u.onstart = () => { if (gen === genRef.current) { setSpeaking(true); setCaption(s); } };
         const done = () => { if (i === sentences.length - 1) finish(gen); };
         u.onend = done;
@@ -111,7 +116,7 @@ export function VoiceProvider({ children }) {
     if (gen !== genRef.current) return;
     if (i >= sentences.length) { finish(gen); return; }
 
-    const opts = { rate: rateRef.current, lang: langRef.current };
+    const opts = { rate: effectiveRate(rateRef.current, langRef.current), lang: langRef.current };
     const s = sentences[i];
     if (i + 1 < sentences.length) {
       fetch(ttsUrl(sentences[i + 1], opts)).catch(() => {});  // 다음 문장 미리 받기

@@ -19,7 +19,8 @@ class CaptureStore:
             connection.executescript("""
                 CREATE TABLE IF NOT EXISTS documents (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
+                    owner_id TEXT NOT NULL,
+                    user_id INTEGER,
                     request_key TEXT,
                     status TEXT NOT NULL DEFAULT 'capturing'
                         CHECK(status IN ('capturing', 'queued')),
@@ -27,7 +28,7 @@ class CaptureStore:
                     analysis_requested_at TEXT,
                     analysis_started_at TEXT,
                     analysis_error TEXT,
-                    UNIQUE(user_id, request_key)
+                    UNIQUE(owner_id, request_key)
                 );
                 CREATE TABLE IF NOT EXISTS pages (
                     id TEXT NOT NULL,
@@ -42,6 +43,14 @@ class CaptureStore:
                 );
             """)
 
+        # 기존 B 개발 DB에도 A의 공통 소유권 검사 열을 추가한다.
+        with self._db(write=True) as connection:
+            columns = {row["name"] for row in connection.execute("PRAGMA table_info(documents)")}
+            if "user_id" not in columns:
+                connection.execute("ALTER TABLE documents ADD COLUMN user_id INTEGER")
+            connection.execute("UPDATE documents SET user_id = CAST(owner_id AS INTEGER) "
+                               "WHERE user_id IS NULL AND owner_id != '' AND owner_id NOT GLOB '*[^0-9]*'")
+
     @contextmanager
     def _db(self, *, write: bool = False):
         with closing(sqlite3.connect(self.db_path, timeout=10)) as connection:
@@ -53,38 +62,38 @@ class CaptureStore:
                 yield connection
 
     @staticmethod
-    def _document(connection, document_id: int, user_id: int):
+    def _document(connection, document_id: int, owner_id: str):
         document = connection.execute(
-            "SELECT * FROM documents WHERE id = ? AND user_id = ?",
-            (document_id, user_id),
+            "SELECT * FROM documents WHERE id = ? AND owner_id = ?",
+            (document_id, owner_id),
         ).fetchone()
         if document is None:
             raise CaptureError(404, "문서 번호를 찾을 수 없어요.")
         return document
 
-    def document(self, document_id: int, user_id: int) -> dict:
+    def document(self, document_id: int, owner_id: str) -> dict:
         with self._db() as connection:
-            return dict(self._document(connection, document_id, user_id))
+            return dict(self._document(connection, document_id, owner_id))
 
-    def create_document(self, user_id: int, request_key: str | None) -> int:
+    def create_document(self, owner_id: str, request_key: str | None) -> int:
         with self._db(write=True) as connection:
             if request_key:
                 existing = connection.execute(
-                    "SELECT id FROM documents WHERE user_id = ? AND request_key = ?",
-                    (user_id, request_key),
+                    "SELECT id FROM documents WHERE owner_id = ? AND request_key = ?",
+                    (owner_id, request_key),
                 ).fetchone()
                 if existing:
                     return existing["id"]
             cursor = connection.execute(
-                "INSERT INTO documents (user_id, request_key, created_at) VALUES (?, ?, ?)",
-                (user_id, request_key, datetime.now(timezone.utc).isoformat()),
+                "INSERT INTO documents (owner_id, user_id, request_key, created_at) VALUES (?, ?, ?, ?)",
+                (owner_id, int(owner_id) if str(owner_id).isdigit() else None, request_key, datetime.now(timezone.utc).isoformat()),
             )
             return cursor.lastrowid
 
-    def add_page(self, document_id: int, user_id: int, page_id: str,
+    def add_page(self, document_id: int, owner_id: str, page_id: str,
                  source_sha256: str, image: bytes, width: int, height: int) -> dict:
         with self._db(write=True) as connection:
-            document = self._document(connection, document_id, user_id)
+            document = self._document(connection, document_id, owner_id)
             existing = connection.execute(
                 "SELECT * FROM pages WHERE document_id = ? AND id = ?", (document_id, page_id),
             ).fetchone()
@@ -121,9 +130,9 @@ class CaptureStore:
                 "filename": filename, "width": width, "height": height,
             }
 
-    def finish(self, document_id: int, user_id: int) -> int:
+    def finish(self, document_id: int, owner_id: str) -> int:
         with self._db(write=True) as connection:
-            self._document(connection, document_id, user_id)
+            self._document(connection, document_id, owner_id)
             count = connection.execute(
                 "SELECT COUNT(*) FROM pages WHERE document_id = ?", (document_id,),
             ).fetchone()[0]
@@ -136,9 +145,9 @@ class CaptureStore:
             )
             return count
 
-    def page_paths(self, document_id: int, user_id: int) -> list[Path]:
+    def page_paths(self, document_id: int, owner_id: str) -> list[Path]:
         with self._db() as connection:
-            self._document(connection, document_id, user_id)
+            self._document(connection, document_id, owner_id)
             pages = connection.execute(
                 "SELECT filename FROM pages WHERE document_id = ? ORDER BY page_number",
                 (document_id,),

@@ -11,7 +11,8 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from pathlib import Path
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from common import auth, tts
@@ -50,9 +51,18 @@ def health():
 app.include_router(auth.router)
 app.include_router(tts.router)
 
-# B: 촬영·업로드 (documents 생성 시 user_id 저장 필요 → common.auth.get_current_user)
-# from b_capture.router import router as capture_router
-# app.include_router(capture_router)
+# B: 공통 DB와 A의 Bearer 인증으로 촬영 문서를 저장한다.
+from b_capture.router import create_capture_router
+from b_capture.storage import CaptureStore
+
+
+def capture_owner(user: dict = Depends(auth.get_current_user)) -> str:
+    return str(user["id"])
+
+
+capture_store = CaptureStore(db_path(), Path(os.getenv("TTOBAK_DATA_DIR", "data")) / "uploads")
+app.state.capture_store = capture_store
+
 
 # C: 분석 상태·결과 — 소유권 검사(require_document_owner)를 붙여서만 연결
 try:
@@ -67,6 +77,12 @@ try:
     )
 except ImportError:
     log.info("c_analysis 모듈이 아직 없어 분석 라우터를 건너뜁니다.")
+
+# C가 자체 상태 조회를 제공하면 같은 경로를 중복 등록하지 않는다.
+_has_analysis_status = any(getattr(route, "path", None) == "/documents/{document_id}/status" for route in app.routes)
+app.include_router(create_capture_router(
+    capture_store, require_owner=capture_owner, include_status=not _has_analysis_status,
+))
 
 # D: 보관함 목록 · AI 검색
 try:

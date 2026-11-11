@@ -49,7 +49,7 @@ app = create_app(
 
 ## A의 공통 앱 연결
 
-`create_capture_router(store, require_owner=...)`에 로그인한 사용자 번호(`users.id`)를 반환하는 함수를 전달합니다. 문서 주인은 `documents.user_id`에 저장되어 A의 `require_document_owner`가 그대로 검사합니다. C의 조회 라우터를 함께 사용할 때는 B 라우터에 `include_status=False`를 지정해 상태 주소 중복을 피합니다. 문서 분석 결과 `GET /documents/{id}`는 C가 제공합니다.
+`create_capture_router(store, require_owner=...)`에 로그인한 사용자 ID 문자열을 반환하는 함수를 전달합니다. 문서별 소유권 검사는 B 저장소가 처리합니다. C의 조회 라우터를 함께 사용할 때는 B 라우터에 `include_status=False`를 지정해 상태 주소 중복을 피합니다. 문서 분석 결과 `GET /documents/{id}`는 C가 제공합니다.
 
 ## 검증
 
@@ -58,3 +58,12 @@ PYTHONPATH=backend python -m unittest discover -s backend/b_capture/tests -v
 ```
 
 실제 계정이나 외부 AI API 호출 없이 임시 DB와 테스트 사진으로 검증합니다.
+
+## main 공통 앱에서 사용
+
+`backend` 폴더에서 `python -m uvicorn main:app --reload`로 실행합니다.
+공통 앱의 촬영 API는 A의 Bearer 토큰이 필요하며, 같은 DB의 `documents.user_id`에 로그인한 사용자 번호를 저장합니다.
+`frontend` 앱의 `/camera`에 촬영 화면을 연결했고, 공통 API 클라이언트가 토큰을 붙입니다.
+촬영 종료 후 `/loading/:docId`는 서버 상태를 조회합니다. C가 연결되지 않으면 대기 화면을 유지합니다.
+C의 분석 실행 연결은 아직 필요하며, 결과 화면은 C 담당입니다.
+기존 `b-capture-demo` 및 `dev_app`은 단독 시연용으로 유지합니다.

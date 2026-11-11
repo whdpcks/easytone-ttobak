@@ -25,6 +25,8 @@ import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Me from './pages/Me';
 import ComingSoon from './pages/ComingSoon';
+import Camera from './capture/Camera';
+import Loading from './capture/Loading';
 import Archive from './pages/Archive';
 import Result from './pages/Result';
 import Detail from './pages/Detail';
@@ -46,8 +48,8 @@ export default function App() {
               <Route path="/me" element={auth(<Me />)} />
 
               {/* B: 촬영 → 로딩·도장 */}
-              <Route path="/camera" element={auth(<ComingSoon screen="camera" owner="B" />)} />
-              <Route path="/loading/:docId" element={auth(<ComingSoon screen="loading" owner="B" />)} />
+              <Route path="/camera" element={auth(<Camera />)} />
+              <Route path="/loading/:docId" element={auth(<Loading />)} />
 
               {/* 결과 — 지금은 D의 Result (C의 DocumentResultPage와 어느 쪽을 쓸지 정해야 함) */}
               <Route path="/result/:docId" element={auth(<Result />)} />

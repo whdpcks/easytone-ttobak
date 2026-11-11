@@ -195,10 +195,12 @@ def run():
     with connect() as conn:
         user_id = conn.execute("SELECT id FROM users WHERE phone = ?", (DEMO_USER["phone"],)).fetchone()[0]
         for document_id, sample in enumerate(SAMPLES, start=FIRST_ID):
+            # main.py의 capture_owner와 같이 owner_id는 사용자 번호 문자열, user_id는 숫자
             conn.execute(
-                "INSERT OR IGNORE INTO documents (id, user_id, status, created_at, analysis_requested_at) "
-                "VALUES (?, ?, 'queued', ?, ?)",
-                (document_id, user_id, now, now),
+                "INSERT OR IGNORE INTO documents "
+                "(id, owner_id, user_id, status, created_at, analysis_requested_at) "
+                "VALUES (?, ?, ?, 'queued', ?, ?)",
+                (document_id, str(user_id), user_id, now, now),
             )
             result = {"id": document_id, "status": "completed", **sample}
             cursor = conn.execute(

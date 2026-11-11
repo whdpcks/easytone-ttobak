@@ -22,7 +22,7 @@ def create_app(*, data_dir=None, db_path=None, require_owner=None, analyze=None,
     application.state.capture_store = store
 
     def local_owner():
-        return 1
+        return "local-dev"
 
     application.include_router(create_capture_router(
         store, require_owner=require_owner or local_owner,
