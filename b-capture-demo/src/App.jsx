@@ -5,22 +5,25 @@ export default function App() {
   const [status, setStatus] = useState('off')
   const [error, setError] = useState('')
 
-  const [photo, setPhoto] = useState(null)
-
-  useEffect(() => {
-    return () => {
-      if (photo) URL.revokeObjectURL(photo.url)
-    }
-  }, [photo])
+  const [photos, setPhotos] = useState([])
+  const [capturing, setCapturing] = useState(false)
+  const photoUrls = useRef([])
+  const documentId = useRef(null)
+  const uploadedPhotos = useRef(new Set())
+  const busy = useRef(false)
+  const mounted = useRef(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
+    mounted.current = true
 
     return () => {
-      // 화면을 나가면 카메라 사용을 멈춘다.
+      mounted.current = false
+      // 화면을 나가면 카메라와 사진 미리보기 자원을 정리한다.
       video?.srcObject?.getTracks().forEach((track) => track.stop())
+      photoUrls.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
 
@@ -52,6 +55,7 @@ export default function App() {
   }
 
   function takePhoto() {
+    if (busy.current) return
     const video = videoRef.current
 
     if (!video?.videoWidth || !video.videoHeight) {
@@ -67,58 +71,64 @@ export default function App() {
     canvas.height = video.videoHeight
     canvas.getContext('2d').drawImage(video, 0, 0)
 
-    // 복사한 화면을 JPEG로 만들고 미리보기 주소를 만든다.
+    busy.current = true
+    setCapturing(true)
+
+    // 사진 변환이 끝난 순서대로 한 장씩 추가한다.
     canvas.toBlob((blob) => {
+      busy.current = false
+      if (!mounted.current) return
+      setCapturing(false)
       if (!blob) {
         setError('사진을 찍지 못했어요. 다시 눌러주세요.')
         return
       }
 
-      setPhoto({
-        blob,
-        url: URL.createObjectURL(blob),
-        width: canvas.width,
-        height: canvas.height,
-      })
+      const url = URL.createObjectURL(blob)
+      photoUrls.current.push(url)
+      setPhotos((previous) => [
+        ...previous,
+        { blob, url, width: canvas.width, height: canvas.height },
+      ])
       setSaved(false)
     }, 'image/jpeg', 0.95)
   }
 
-  async function savePhoto() {
-    if (!photo || saving || saved) return
+  async function savePhotos() {
+    if (photos.length === 0 || busy.current || saved) return
 
+    busy.current = true
     setSaving(true)
     setError('')
 
     try {
-      // 사진을 담을 문서 번호를 발급받는다.
-      const documentResponse = await fetch('/documents', {
-        method: 'POST',
-      })
-
-      if (!documentResponse.ok) {
-        throw new Error('문서를 만들지 못했어요.')
+      // 여러 장을 같은 문서에 저장할 수 있도록 문서 번호를 기억한다.
+      if (documentId.current === null) {
+        const response = await fetch('/documents', { method: 'POST' })
+        if (!response.ok) throw new Error('문서를 만들지 못했어요.')
+        const { id } = await response.json()
+        documentId.current = id
       }
 
-      const { id } = await documentResponse.json()
+      for (const [index, photo] of photos.entries()) {
+        // 저장 완료 응답을 받은 사진은 다음 저장에서 건너뛴다.
+        if (uploadedPhotos.current.has(photo.url)) continue
 
-      // 찍은 JPEG를 file이라는 이름으로 보낸다.
-      const form = new FormData()
-      form.append('file', photo.blob, 'capture.jpg')
-
-      const uploadResponse = await fetch(`/documents/${id}/pages`, {
-        method: 'POST',
-        body: form,
-      })
-
-      if (!uploadResponse.ok) {
-        throw new Error('사진을 저장하지 못했어요.')
+        const form = new FormData()
+        form.append('file', photo.blob, `capture-${index + 1}.jpg`)
+        const response = await fetch(`/documents/${documentId.current}/pages`, {
+          method: 'POST',
+          body: form,
+        })
+        if (!response.ok) throw new Error('사진을 저장하지 못했어요.')
+        uploadedPhotos.current.add(photo.url)
       }
 
       setSaved(true)
     } catch {
-      setError('사진을 저장하지 못했어요. 서버 연결을 확인하고 다시 눌러주세요.')
+      setError('사진을 모두 저장하지 못했어요. 서버 연결을 확인하고 다시 눌러주세요.')
     } finally {
+      busy.current = false
       setSaving(false)
     }
   }
@@ -137,21 +147,29 @@ export default function App() {
         muted
         style={{ display: 'block', width: '100%', maxWidth: 480 }}
       />
-      <button type="button" onClick={takePhoto} disabled={status !== 'on' || saving}>
+      <button type="button" onClick={takePhoto} disabled={status !== 'on' || saving || capturing}>
         찍기
       </button>
 
-      {photo && (
-        <section>
-          <h2>1장 찍었어요</h2>
-          <img src={photo.url} alt="찍은 문서" style={{ width: '100%', maxWidth: 480 }} />
-          <p>사진 크기 {photo.width} × {photo.height}px</p>
+      <p role="status">{photos.length}장 찍었어요</p>
+      {photos.length > 0 && (
+        <section aria-label="찍은 사진">
+          {photos.map((photo, index) => (
+            <div key={photo.url}>
+              <img
+                src={photo.url}
+                alt={`찍은 문서 ${index + 1}장째`}
+                style={{ width: '100%', maxWidth: 240 }}
+              />
+              <p>{index + 1}장째 · {photo.width} × {photo.height}px</p>
+            </div>
+          ))}
           <button
             type="button"
-            onClick={savePhoto}
-            disabled={saving || saved}
+            onClick={savePhotos}
+            disabled={saving || saved || capturing}
           >
-            {saving ? '저장하는 중' : saved ? '사진 저장 완료' : '사진 저장'}
+            {saving ? '저장하는 중' : saved ? '사진 저장 완료' : '사진 모두 저장'}
           </button>
         </section>
       )}
