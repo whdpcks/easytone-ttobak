@@ -67,7 +67,10 @@ body { font-family: var(--body); line-height: 1.5; color: var(--ink); }
 .ib .gg { font-family: var(--display); font-size: 1.5em; line-height: 1; letter-spacing: -.04em; }
 .ib .gg small { font-size: .65em; }
 .ib.speaking { border-color: var(--red); color: var(--red); }
-.ib.sound[aria-pressed="false"] { color: var(--ink2); border-style: dashed; background: var(--paper); }
+.ib.sound { min-width: 64px; gap: 2px; }
+.ib.sound svg { width: 32px; height: 32px; stroke-width: 2.4; }
+.ib.sound[aria-pressed="true"]  { color: #0F5A39; background: #E3F4EA; border-color: var(--ok); }
+.ib.sound[aria-pressed="false"] { color: #8A1120; background: var(--red-soft); border-color: var(--red); }
 .spacer { width: 56px; flex: none; }
 
 /* ── 스크롤 본문 ── */
