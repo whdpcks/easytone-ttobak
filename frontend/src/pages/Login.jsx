@@ -5,8 +5,9 @@ import Header from '../common/Header';
 import PhoneVerify from '../common/PhoneVerify';
 import { useSettings } from '../common/SettingsContext';
 import { useUI } from '../common/UIContext';
+import { errorText, useT } from '../common/i18n';
 import useVoice from '../hooks/useVoice';
-import { demoLogin, login } from '../api/auth';
+import { login } from '../api/auth';
 
 export { formatPhone, isPhone } from '../common/PhoneVerify';
 
@@ -15,6 +16,7 @@ export default function Login() {
   const location = useLocation();
   const { setUser } = useSettings();
   const { toast } = useUI();
+  const t = useT();
 
   const [phone, setPhone] = useState(location.state?.phone || '');
   const [code, setCode] = useState('');
@@ -22,26 +24,27 @@ export default function Login() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const voiceText = '로그인 화면이에요. 전화번호를 넣고 인증번호 받기를 눌러주세요.';
+  const voiceText = t('login.voice');
   const { speak } = useVoice(voiceText);
 
-  const fail = (msg) => { setError(msg); if (msg) speak(msg); };
-
-  const done = (user) => {
-    setUser(user);
-    toast(`${user.name} 님, 반가워요.`);
-    navigate(location.state?.from || '/home', { replace: true });
+  const fail = (msg, e) => {
+    const text = e ? errorText(t, e) : msg;
+    setError(text);
+    if (text) speak(text);
   };
 
   const doLogin = async (c = code) => {
     if (busy) return;
-    if (c.length !== 6) { fail('인증번호 숫자 여섯 개를 넣어 주세요.'); return; }
+    if (c.length !== 6) { fail(t('err.code6')); return; }
     setBusy(true);
     setError('');
     try {
-      done(await login(phone, c));
+      const user = await login(phone, c);
+      setUser(user);
+      toast(t('login.welcome', { name: user.name }));
+      navigate(location.state?.from || '/home', { replace: true });
     } catch (e) {
-      fail(e.message);
+      fail('', e);
     } finally {
       setBusy(false);
     }
@@ -49,24 +52,19 @@ export default function Login() {
 
   const onPhoneError = (msg, e) => {
     if (e?.status === 404) {
-      toast('처음이시네요. 회원가입을 해 주세요.');
+      toast(t('login.firstTime'));
       navigate('/signup', { state: { phone } });
       return;
     }
-    fail(msg);
-  };
-
-  const tryDemo = async () => {
-    setBusy(true);
-    try { done(await demoLogin()); } catch (e) { fail(e.message); } finally { setBusy(false); }
+    fail(msg, e);
   };
 
   return (
     <div className="app">
-      <Header left="back" title="로그인" voiceText={voiceText} />
+      <Header left="back" title={t('login.title')} voiceText={voiceText} />
       <form className="body" onSubmit={(e) => { e.preventDefault(); doLogin(); }}>
-        <h1 className="h">전화번호로<br />들어오세요</h1>
-        <p className="sub">비밀번호는 필요 없어요. 문자로 온 숫자만 넣으면 돼요.</p>
+        <h1 className="h pre">{t('login.h')}</h1>
+        <p className="sub">{t('login.sub')}</p>
 
         <PhoneVerify
           purpose="login" phone={phone} setPhone={setPhone} code={code} setCode={setCode}
@@ -77,18 +75,14 @@ export default function Login() {
 
         {sent && (
           <button className="btn primary" type="submit" disabled={busy || code.length !== 6}>
-            {busy ? '들어가는 중…' : '로그인'}
+            {busy ? t('login.busy') : t('login.btn')}
           </button>
         )}
 
-        <div className="foot-links">
-          <button type="button" className="btn line" onClick={() => navigate('/signup', { state: { phone } })}>
-            처음이세요? 회원가입
-          </button>
-          <button type="button" className="btn ghost" onClick={tryDemo} disabled={busy}>
-            시연 계정으로 둘러보기
-          </button>
-        </div>
+        <div className="grow" />
+        <button type="button" className="btn line" onClick={() => navigate('/signup', { state: { phone } })}>
+          {t('login.toSignup')}
+        </button>
       </form>
     </div>
   );

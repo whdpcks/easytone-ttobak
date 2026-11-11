@@ -22,10 +22,10 @@ router = APIRouter(tags=["tts"])
 
 MAX_CHARS = 300
 
-# 언어별 목소리 (여성, 또렷한 목소리 위주)
+# 언어별 목소리 (여성). 기본 빠르기는 1.25배 (앱의 "보통")
 VOICES = {
-    "ko": "ko-KR-SunHiNeural",
-    "en": "en-US-AvaNeural",
+    "ko": "en-US-EmmaMultilingualNeural",   # 팀 선택: 엠마(다국어) — 한국어도 자연스럽고 친근함
+    "en": "en-US-EmmaMultilingualNeural",
     "zh": "zh-CN-XiaoxiaoNeural",
     "ja": "ja-JP-NanamiNeural",
     "vi": "vi-VN-HoaiMyNeural",
@@ -77,7 +77,7 @@ async def synthesize(text: str, lang: str, rate: float) -> Path:
 async def tts(
     text: str = Query(min_length=1, max_length=MAX_CHARS),
     lang: str = "ko",
-    rate: float = Query(default=0.92, ge=0.5, le=1.5),
+    rate: float = Query(default=1.25, ge=0.5, le=1.6),
 ):
     text = " ".join(text.split())
     try:

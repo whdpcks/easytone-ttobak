@@ -16,9 +16,9 @@ export const SCALES = [
   { value: 1.5, label: '아주 크게' },
 ];
 export const RATES = [
-  { value: 0.8, label: '천천히' },
-  { value: 0.92, label: '보통' },
-  { value: 1.05, label: '빠르게' },
+  { value: 1.05, label: '천천히' },
+  { value: 1.25, label: '보통' },   // 팀 기본: 엠마 목소리 1.25배
+  { value: 1.45, label: '빠르게' },
 ];
 /* 사용할 말 — label: 그 나라 글자(외국인이 바로 알아보게), ko: 한국어 이름, hello: 시작 화면 인사 */
 export const LANGS = [
@@ -43,7 +43,7 @@ const SettingsContext = createContext(null);
 
 export function SettingsProvider({ children }) {
   const [scale, setScaleState] = useState(() => pick(SCALES, Number(readStorage(STORAGE.scale, 1)), 1));
-  const [rate, setRateState] = useState(() => pick(RATES, Number(readStorage(STORAGE.rate, 0.92)), 0.92));
+  const [rate, setRateState] = useState(() => pick(RATES, Number(readStorage(STORAGE.rate, 1.25)), 1.25));
   const [lang, setLangState] = useState(() => pick(LANGS, readStorage(STORAGE.lang, 'ko'), 'ko'));
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(() => Boolean(getToken()));
@@ -52,6 +52,7 @@ export function SettingsProvider({ children }) {
   useEffect(() => {
     document.documentElement.style.setProperty('--scale', String(scale));
   }, [scale]);
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
   // 서버에 저장된 설정으로 맞추기 (로그인·새로고침 시)
   const applyUser = useCallback((u) => {

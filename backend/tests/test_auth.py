@@ -21,7 +21,6 @@ class AuthApiTest(unittest.TestCase):
             "TTOBAK_DB_PATH": str(Path(self.tmp.name) / "test.db"),
             "TTOBAK_SEED_DEMO": "1",
             "TTOBAK_SMS_MODE": "demo",
-            "TTOBAK_DEMO_LOGIN": "1",
         })
         self.env.start()
         os.environ.pop("TTOBAK_FIXED_CODE", None)
@@ -106,13 +105,6 @@ class AuthApiTest(unittest.TestCase):
     def test_invalid_phone_gets_422(self):
         res = self.client.post("/auth/send-code", json={"phone": "12345"})
         self.assertEqual(res.status_code, 422)
-
-    def test_demo_login(self):
-        r = self.client.post("/auth/demo-login")
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json()["user"]["phone"], "01012345678")
-        with mock.patch.dict(os.environ, {"TTOBAK_DEMO_LOGIN": "0"}):
-            self.assertEqual(self.client.post("/auth/demo-login").status_code, 404)
 
     # ── 가입 ──
     def test_signup_requires_code_and_saves_settings(self):

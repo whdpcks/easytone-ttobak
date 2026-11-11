@@ -13,11 +13,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import Sheet from './Sheet';
 import FontSizeSheet from './FontSizeSheet';
 import { useVoiceContext } from './VoiceContext';
+import { useT } from './i18n';
 
 const UIContext = createContext(null);
 
 export function UIProvider({ children }) {
   const { speak, replay } = useVoiceContext();
+  const t = useT();
   const [toastText, setToastText] = useState('');
   const [dialog, setDialog] = useState(null);   // { title, message, okText, cancelText, danger, resolve }
   const [fontOpen, setFontOpen] = useState(false);
@@ -43,8 +45,8 @@ export function UIProvider({ children }) {
 
   const openFontSheet = useCallback(() => {
     setFontOpen(true);
-    speak('글씨 크기를 골라주세요. 보통, 크게, 아주 크게가 있어요.');
-  }, [speak]);
+    speak(t('font.voice'));
+  }, [speak, t]);
   const closeFontSheet = useCallback(() => {
     setFontOpen(false);
     replay();

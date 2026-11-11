@@ -6,11 +6,13 @@ import { useSettings } from '../common/SettingsContext';
 import useVoice from '../hooks/useVoice';
 import Icon from '../utils/icons';
 import { api } from '../api/client';
+import { useT } from '../common/i18n';
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useSettings();
   const [count, setCount] = useState(null);
+  const t = useT();
 
   // 보관함 개수 (D의 GET /documents). 아직 없으면 개수 없이 보여줌
   useEffect(() => {
@@ -21,8 +23,8 @@ export default function Home() {
     return () => ctrl.abort();
   }, []);
 
-  const name = user?.name ? `${user.name} 님` : '';
-  const voiceText = `${name ? `${name}, ` : ''}무엇을 할까요? 새 종이를 찍으려면 문서 촬영, 찍어둔 종이를 보려면 보관함을 눌러주세요.`;
+  const name = user?.name || '';
+  const voiceText = t('home.voice', { name: name ? t('home.voiceName', { name }) : '' });
   useVoice(voiceText);
 
   return (
@@ -30,22 +32,22 @@ export default function Home() {
       <Header
         left="none"
         voiceText={voiceText}
-        right={<HeaderButton icon="user" label="내정보" onClick={() => navigate('/me')} />}
+        right={<HeaderButton icon="user" label={t('hdr.me')} onClick={() => navigate('/me')} />}
       />
       <main className="body">
-        <h1 className="h">{name && <>{name},<br /></>}무엇을 할까요?</h1>
+        <h1 className="h">{name && <>{t('home.hello', { name })}<br /></>}{t('home.h')}</h1>
 
         <button className="big cam" onClick={() => navigate('/camera')}>
           <span className="ic"><Icon name="camera" /></span>
-          <div><b>문서 촬영</b><br /><span className="d">새 종이를 찍어요</span></div>
+          <div><b>{t('home.cam')}</b><br /><span className="d">{t('home.camD')}</span></div>
           <span className="arrow"><Icon name="chev" /></span>
         </button>
 
         <button className="big box" onClick={() => navigate('/archive')}>
           <span className="ic"><Icon name="box" /></span>
           <div>
-            <b>보관함</b><br />
-            <span className="d">{count === null ? '찍어둔 종이를 봐요' : `찍어둔 종이 ${count}개`}</span>
+            <b>{t('home.box')}</b><br />
+            <span className="d">{count === null ? t('home.boxD') : t('home.boxN', { n: count })}</span>
           </div>
           <span className="arrow"><Icon name="chev" /></span>
         </button>

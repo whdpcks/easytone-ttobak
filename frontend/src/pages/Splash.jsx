@@ -7,13 +7,12 @@ import { useVoiceContext } from '../common/VoiceContext';
 import useVoice from '../hooks/useVoice';
 import Icon from '../utils/icons';
 import { getToken } from '../api/client';
-
-const VOICE = '안녕하세요. 또박입니다. 종이를 찍으면, 중요한 것만 쉬운 말로 바꿔서 읽어드려요. 처음이면 시작하기를 눌러주세요.';
+import { useT } from '../common/i18n';
 
 const HOW = [
-  { icon: 'camera', title: '종이를 찍으면', desc: '안내문, 고지서, 계약서 무엇이든' },
-  { icon: 'mark', title: '중요한 것만 쉬운 말로', desc: '날짜, 준비물, 주의할 점을 골라서' },
-  { icon: 'speaker', title: '소리 내어 읽어드려요', desc: '글씨도 크게, 몇 번이든 다시' },
+  { icon: 'camera', key: 'splash.how1' },
+  { icon: 'mark', key: 'splash.how2' },
+  { icon: 'speaker', key: 'splash.how3' },
 ];
 
 export default function Splash() {
@@ -21,6 +20,8 @@ export default function Splash() {
   const { unlock } = useVoiceContext();
   const [hello, setHello] = useState(0);
   const [active, setActive] = useState(0);
+  const t = useT();
+  const VOICE = t('splash.voice');
   useVoice(VOICE);
 
   useEffect(() => {
@@ -39,24 +40,24 @@ export default function Splash() {
           <span key={hello} lang={LANGS[hello].value}>{LANGS[hello].hello}</span>
         </div>
         <div className="logo-wrap"><span className="logo">또박</span></div>
-        <p className="tagline">어려운 종이,<br />또박또박 읽어드려요</p>
+        <p className="tagline pre">{t('splash.tagline')}</p>
 
         <ol className="how">
           {HOW.map((h, i) => (
-            <li key={h.title} className={i === active ? 'on' : ''}>
+            <li key={h.key} className={i === active ? 'on' : ''}>
               <span className="how-ic">
                 {h.icon === 'mark'
                   ? <span className="mark-ic" aria-hidden="true">가</span>
                   : <Icon name={h.icon} />}
               </span>
-              <span className="how-tx"><b>{h.title}</b><small>{h.desc}</small></span>
+              <span className="how-tx"><b>{t(h.key)}</b><small>{t(`${h.key}d`)}</small></span>
             </li>
           ))}
         </ol>
 
         <div className="grow" />
-        <button className="btn red" onClick={() => go('/signup')}>시작하기</button>
-        <button className="btn line" onClick={() => go('/login')}>이미 가입했어요 · 로그인</button>
+        <button className="btn red" onClick={() => go('/signup')}>{t('splash.start')}</button>
+        <button className="btn line" onClick={() => go('/login')}>{t('splash.login')}</button>
       </main>
     </div>
   );

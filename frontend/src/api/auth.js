@@ -17,13 +17,6 @@ export async function signup(body) {
   return res.user;
 }
 
-/** 시연 계정으로 바로 들어가기 (서버에서 TTOBAK_DEMO_LOGIN=1 일 때만) */
-export async function demoLogin() {
-  const res = await api.post('/auth/demo-login', undefined, { auth: false });
-  setToken(res.token);
-  return res.user;
-}
-
 export async function logout() {
   try { await api.post('/auth/logout'); } catch { /* 토큰이 이미 없어도 로그아웃 처리 */ }
   clearToken();

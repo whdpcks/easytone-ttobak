@@ -3,8 +3,10 @@
    누르면 인증번호가 자동으로 들어갑니다. */
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from './i18n';
 
 export default function SmsBanner({ code, onUse, onClose }) {
+  const t = useT();
   const [leaving, setLeaving] = useState(false);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -21,16 +23,16 @@ export default function SmsBanner({ code, onUse, onClose }) {
       type="button"
       className={`sms${leaving ? ' out' : ''}`}
       onClick={() => { onUse(code); onClose(); }}
-      aria-label={`문자: 또박 인증번호 ${code.split('').join(' ')}. 누르면 자동으로 넣어요.`}
+      aria-label={`${t('sms.text', { code: code.split('').join(' ') })} ${t('sms.hint')}`}
     >
       <span className="sms-ic" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" /></svg>
       </span>
       <span className="sms-body">
-        <span className="sms-top"><b>메시지</b><small>지금</small></span>
-        <span className="sms-from">또박</span>
-        <span className="sms-text">[또박] 인증번호 <b>[{code}]</b>를 입력해 주세요.</span>
-        <span className="sms-hint">눌러서 자동으로 넣기</span>
+        <span className="sms-top"><b>{t('sms.app')}</b><small>{t('sms.now')}</small></span>
+        <span className="sms-from">{t('sms.from')}</span>
+        <span className="sms-text">{t('sms.text', { code })}</span>
+        <span className="sms-hint">{t('sms.hint')}</span>
       </span>
     </button>,
     document.body,

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone       TEXT    NOT NULL UNIQUE,
     language    TEXT    NOT NULL DEFAULT 'ko',
     font_scale  REAL    NOT NULL DEFAULT 1.0,
-    voice_rate  REAL    NOT NULL DEFAULT 0.92,
+    voice_rate  REAL    NOT NULL DEFAULT 1.25,
     created_at  TEXT    NOT NULL
 );
 
@@ -81,7 +81,7 @@ def connect():
 
 
 def init_db(seed_demo: bool | None = None) -> None:
-    """테이블을 만들고, 시연용 사용자(체험하기 버튼)와 가족 1명을 넣습니다."""
+    """테이블을 만들고, 시연용 사용자(010-1234-5678)와 가족 1명을 넣습니다."""
     if seed_demo is None:
         seed_demo = os.getenv("TTOBAK_SEED_DEMO", "1") == "1"
     with connect() as conn:

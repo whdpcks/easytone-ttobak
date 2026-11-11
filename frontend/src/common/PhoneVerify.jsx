@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { sendCode } from '../api/auth';
 import SmsBanner from './SmsBanner';
 import { useVoiceContext } from './VoiceContext';
+import { useT } from './i18n';
 
 export function formatPhone(raw) {
   const d = String(raw ?? '').replace(/\D/g, '').slice(0, 11);
@@ -19,6 +20,7 @@ export default function PhoneVerify({
   purpose, phone, setPhone, code, setCode, onComplete, onSent, onError, disabled = false,
 }) {
   const { speak } = useVoiceContext();
+  const t = useT();
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [left, setLeft] = useState(0);        // 인증번호 남은 시간(초)
@@ -28,15 +30,15 @@ export default function PhoneVerify({
 
   useEffect(() => {
     if (!sent) return undefined;
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       setLeft(v => Math.max(0, v - 1));
       setResendIn(v => Math.max(0, v - 1));
     }, 1000);
-    return () => clearInterval(t);
+    return () => clearInterval(timer);
   }, [sent]);
 
   const request = async () => {
-    if (!isPhone(phone)) { onError?.('전화번호를 다시 확인해 주세요.'); return; }
+    if (!isPhone(phone)) { onError?.(t('err.phone')); return; }
     setBusy(true);
     onError?.('');
     try {
@@ -46,7 +48,7 @@ export default function PhoneVerify({
       setLeft(res.expires_in ?? 180);
       setResendIn(res.resend_in ?? 20);
       onSent?.();
-      speak('문자로 인증번호를 보냈어요. 문자에 있는 숫자 여섯 개를 넣어 주세요.');
+      speak(t('pv.sent'));
       setTimeout(() => codeRef.current?.focus(), 50);
       // 데모 모드: 실제 문자 대신 1.2초 뒤 "문자 알림"
       if (res.demo_code) setTimeout(() => setBanner(res.demo_code), 1200);
@@ -66,7 +68,7 @@ export default function PhoneVerify({
   return (
     <>
       <div className="field">
-        <label htmlFor={`phone-${purpose}`}>전화번호</label>
+        <label htmlFor={`phone-${purpose}`}>{t('pv.phone')}</label>
         <input
           id={`phone-${purpose}`} inputMode="tel" autoComplete="tel" placeholder="010-0000-0000"
           value={phone} disabled={disabled}
@@ -76,27 +78,27 @@ export default function PhoneVerify({
 
       {!sent && (
         <button type="button" className="btn primary" onClick={request} disabled={busy || disabled}>
-          {busy ? '보내는 중…' : '인증번호 받기'}
+          {busy ? t('pv.sending') : t('pv.send')}
         </button>
       )}
 
       {sent && (
         <div className="field">
           <div className="lbl-row">
-            <label htmlFor={`code-${purpose}`}>문자로 온 인증번호</label>
+            <label htmlFor={`code-${purpose}`}>{t('pv.code')}</label>
             <span className={`timer${left <= 30 ? ' warn' : ''}`} aria-live="off">
-              {left > 0 ? mmss(left) : '시간 지남'}
+              {left > 0 ? mmss(left) : t('pv.expired')}
             </span>
           </div>
           <input
             ref={codeRef} id={`code-${purpose}`} className="code-input"
-            inputMode="numeric" autoComplete="one-time-code" placeholder="숫자 6개" maxLength={6}
+            inputMode="numeric" autoComplete="one-time-code" placeholder={t('pv.codePh')} maxLength={6}
             value={code} disabled={disabled} onChange={(e) => changeCode(e.target.value)}
           />
           <div className="lbl-row">
-            <span className="hint">문자가 안 왔나요?</span>
+            <span className="hint">{t('pv.noSms')}</span>
             <button type="button" className="link" onClick={request} disabled={busy || resendIn > 0 || disabled}>
-              {resendIn > 0 ? `${resendIn}초 뒤 다시 받기` : '다시 받기'}
+              {resendIn > 0 ? t('pv.resendIn', { s: resendIn }) : t('pv.resend')}
             </button>
           </div>
         </div>

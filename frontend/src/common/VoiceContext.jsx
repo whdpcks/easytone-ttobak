@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────
    음성 읽기 + 자막 (A 담당)
 
-   - 서버 음성(GET /tts, 신경망 목소리 mp3)을 <audio>로 재생합니다.
+   - 서버 음성(GET /tts, 신경망 목소리 mp3)을 <audio>로 재생합니다. 사용할 말에 맞는 목소리로 읽습니다.
      서버 음성이 안 되면 브라우저 내장 TTS(speechSynthesis)로 자동 전환합니다.
    - 문장 단위로 끊어 읽고, 지금 읽는 문장을 자막 바에 보여줍니다.
      다음 문장은 미리 받아 둬서 문장 사이가 끊기지 않게 합니다.
@@ -19,30 +19,34 @@ const VoiceContext = createContext(null);
 const hasTTS = typeof window !== 'undefined' && 'speechSynthesis' in window;
 const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
 
+const BCP47 = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', vi: 'vi-VN', th: 'th-TH', id: 'id-ID', fil: 'fil-PH', km: 'km-KH', my: 'my-MM', hi: 'hi-IN', ne: 'ne-NP' };
+
 export const cleanText = (t) => String(t ?? '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
 /** "안녕하세요. 또박입니다." → ["안녕하세요.", "또박입니다."] */
 export function splitSentences(text) {
   const t = cleanText(text);
   if (!t) return [];
-  return t.split(/(?<=[.!?。？！])\s+/).map(s => s.trim()).filter(Boolean);
+  return t.split(/(?<=[.!?])\s+|(?<=[。？！।။។])\s*(?=\S)/u).map(s => s.trim()).filter(Boolean);
 }
 
-export const ttsUrl = (text, { lang = 'ko', rate = 0.92 } = {}) =>
+export const ttsUrl = (text, { lang = 'ko', rate = 1.25 } = {}) =>
   `${API_BASE}/tts?${new URLSearchParams({ text, lang, rate: String(rate) })}`;
 
-function findKoreanVoice() {
+function findVoice(lang = 'ko') {
   if (!hasTTS) return null;
+  const tag = BCP47[lang] || 'ko-KR';
+  const base = tag.split('-')[0];
   const voices = window.speechSynthesis.getVoices();
   return (
-    voices.find(v => v.lang === 'ko-KR' && v.localService) ||
-    voices.find(v => v.lang?.toLowerCase().replace('_', '-').startsWith('ko')) ||
+    voices.find(v => v.lang === tag && v.localService) ||
+    voices.find(v => v.lang?.toLowerCase().replace('_', '-').startsWith(base)) ||
     null
   );
 }
 
 export function VoiceProvider({ children }) {
-  const { rate } = useSettings();
+  const { rate, lang } = useSettings();
   const [caption, setCaption] = useState('');
   const [speaking, setSpeaking] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
@@ -53,9 +57,11 @@ export function VoiceProvider({ children }) {
   const unlockedRef = useRef(false);
   const audioRef = useRef(null);
   const serverFailRef = useRef(0);   // 서버 음성이 연달아 실패하면 브라우저 음성으로
-  const voiceRef = useRef(findKoreanVoice());
+  const voiceRef = useRef(findVoice(lang));
   const rateRef = useRef(rate);
   rateRef.current = rate;
+  const langRef = useRef(lang);
+  langRef.current = lang;
 
   const getAudio = () => {
     if (!audioRef.current) {
@@ -67,11 +73,11 @@ export function VoiceProvider({ children }) {
 
   useEffect(() => {
     if (!hasTTS) return undefined;
-    const load = () => { voiceRef.current = findKoreanVoice(); };
+    const load = () => { voiceRef.current = findVoice(lang); };
     load();
     window.speechSynthesis.addEventListener?.('voiceschanged', load);
     return () => window.speechSynthesis.removeEventListener?.('voiceschanged', load);
-  }, []);
+  }, [lang]);
 
   const finish = useCallback((gen) => {
     if (gen !== genRef.current) return;
@@ -88,9 +94,9 @@ export function VoiceProvider({ children }) {
       if (gen !== genRef.current) return;
       sentences.forEach((s, i) => {
         const u = new SpeechSynthesisUtterance(s);
-        u.lang = 'ko-KR';
+        u.lang = BCP47[langRef.current] || 'ko-KR';
         if (voiceRef.current) u.voice = voiceRef.current;
-        u.rate = rateRef.current;
+        u.rate = Math.min(rateRef.current, 1.3);  // 브라우저 음성은 빠르면 알아듣기 어려움
         u.onstart = () => { if (gen === genRef.current) { setSpeaking(true); setCaption(s); } };
         const done = () => { if (i === sentences.length - 1) finish(gen); };
         u.onend = done;
@@ -105,7 +111,7 @@ export function VoiceProvider({ children }) {
     if (gen !== genRef.current) return;
     if (i >= sentences.length) { finish(gen); return; }
 
-    const opts = { rate: rateRef.current };
+    const opts = { rate: rateRef.current, lang: langRef.current };
     const s = sentences[i];
     if (i + 1 < sentences.length) {
       fetch(ttsUrl(sentences[i + 1], opts)).catch(() => {});  // 다음 문장 미리 받기

@@ -1,30 +1,25 @@
-/* 회원가입 (A) — 4단계: 사용할 말 → 글씨 크기 → 목소리 빠르기 → 이름·전화번호 인증
-   고르는 즉시 앱에 적용돼서, 바뀐 글씨·목소리를 바로 보고 들을 수 있습니다. */
+/* 회원가입 (A) — 한 화면: 사용할 말 · 글씨 크기 · 목소리 빠르기 · 이름 · 전화번호 인증
+   고르는 즉시 앱에 적용됩니다. 말을 바꾸면 화면 글자와 목소리가 바로 그 말로 바뀝니다. */
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import ChoiceSheet from '../common/ChoiceSheet';
 import Header from '../common/Header';
 import PhoneVerify from '../common/PhoneVerify';
 import { LANGS, RATES, SCALES, useSettings } from '../common/SettingsContext';
 import { useUI } from '../common/UIContext';
+import { errorText, useT } from '../common/i18n';
 import useVoice from '../hooks/useVoice';
 import Icon from '../utils/icons';
 import { signup } from '../api/auth';
-
-const STEPS = [
-  { key: 'lang', title: '어떤 말이 편하세요?', voice: '처음 오셨군요. 먼저 편한 말을 골라주세요.' },
-  { key: 'scale', title: '글씨 크기를 골라주세요', voice: '글씨 크기를 골라주세요. 누르면 바로 바뀌어요.' },
-  { key: 'rate', title: '목소리 빠르기를 골라주세요', voice: '목소리 빠르기를 골라주세요. 누르면 그 빠르기로 들려드려요.' },
-  { key: 'me', title: '이름과 전화번호를 넣어주세요', voice: '이름과 전화번호를 넣고, 문자로 온 인증번호를 넣어주세요.' },
-];
-const PREVIEW = { 1: 1.2, 1.25: 1.5, 1.5: 1.8 };
 
 export default function Signup() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, setLang, scale, setScale, rate, setRate, setUser } = useSettings();
   const { toast } = useUI();
+  const t = useT();
 
-  const [step, setStep] = useState(0);
+  const [langOpen, setLangOpen] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState(location.state?.phone || '');
   const [code, setCode] = useState('');
@@ -32,30 +27,24 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const cur = STEPS[step];
-  const { speak } = useVoice(cur.voice);
-  const fail = (msg) => { setError(msg); if (msg) speak(msg); };
+  const voiceText = t('signup.voice');
+  const { speak } = useVoice(voiceText);   // 말을 바꾸면 문장이 바뀌어서 새 말로 다시 읽음
 
-  const back = () => {
-    setError('');
-    if (step > 0) setStep(step - 1);
-    else navigate(-1);
+  const fail = (msg, e) => {
+    const text = e ? errorText(t, e) : msg;
+    setError(text);
+    if (text) speak(text);
   };
-  const next = () => { setError(''); setStep(step + 1); };
 
-  const pickLang = (l) => {
-    setLang(l.value);
-    speak(l.value === 'ko' ? '한국어를 골랐어요.' : `${l.ko}를 골랐어요. 안내는 지금 한국어로 나와요.`);
-  };
   const pickRate = (r) => {
     setRate(r.value);
-    setTimeout(() => speak(`${r.label}. 이 빠르기로 읽어드릴게요.`), 0);
+    setTimeout(() => speak(t('rate.sample', { x: t(`rate.${r.value}`) })), 0);
   };
 
   const submit = async (c = code) => {
     if (busy) return;
-    if (!name.trim()) { fail('이름을 넣어 주세요.'); return; }
-    if (c.length !== 6) { fail('인증번호 숫자 여섯 개를 넣어 주세요.'); return; }
+    if (!name.trim()) { fail(t('err.name')); return; }
+    if (c.length !== 6) { fail(t('err.code6')); return; }
     setBusy(true);
     setError('');
     try {
@@ -63,14 +52,14 @@ export default function Signup() {
         name: name.trim(), phone, code: c, language: lang, font_scale: scale, voice_rate: rate,
       });
       setUser(user);
-      toast(`${user.name} 님, 환영해요.`);
+      toast(t('signup.welcome', { name: user.name }));
       navigate('/home', { replace: true });
     } catch (e) {
       if (e.status === 409) {
-        toast('이미 가입한 번호예요. 로그인해 주세요.');
+        toast(t('err.registered'));
         navigate('/login', { state: { phone }, replace: true });
       } else {
-        fail(e.message);
+        fail('', e);
       }
     } finally {
       setBusy(false);
@@ -79,99 +68,90 @@ export default function Signup() {
 
   const onPhoneError = (msg, e) => {
     if (e?.status === 409) {
-      toast('이미 가입한 번호예요. 로그인해 주세요.');
+      toast(t('err.registered'));
       navigate('/login', { state: { phone }, replace: true });
       return;
     }
-    fail(msg);
+    fail(msg, e);
   };
+
+  const curLang = LANGS.find(l => l.value === lang) ?? LANGS[0];
 
   return (
     <div className="app">
-      <Header left="back" onLeft={back} title="회원가입" voiceText={cur.voice} />
-      <form className="body" onSubmit={(e) => { e.preventDefault(); step < 3 ? next() : submit(); }}>
-        <div className="steps" aria-label={`${STEPS.length}단계 중 ${step + 1}단계`}>
-          {STEPS.map((s, i) => <i key={s.key} className={i <= step ? 'on' : ''} />)}
-          <span>{step + 1} / {STEPS.length}</span>
+      <Header left="back" title={t('signup.title')} voiceText={voiceText} />
+      <form className="body" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <div>
+          <h1 className="h">{t('signup.h')}</h1>
+          <p className="sub">{t('signup.sub')}</p>
         </div>
 
-        {step === 0 && <p className="eyebrow">처음 오셨군요</p>}
-        <h1 className="h">{cur.title}</h1>
+        {/* 사용할 말 — 외국인도 알아보게 'Language'를 같이 씀 */}
+        <div className="field">
+          <span className="lbl">{t('signup.lang')}{lang !== 'en' && <span className="lbl-en"> · Language</span>}</span>
+          <button type="button" className="picker" onClick={() => setLangOpen(true)} aria-haspopup="dialog">
+            <Icon name="globe" />
+            <b lang={curLang.value}>{curLang.label}</b>
+            <Icon name="chev" className="chev" />
+          </button>
+        </div>
 
-        {cur.key === 'lang' && (
-          <div className="langs" role="radiogroup" aria-label="사용할 말">
-            {LANGS.map(l => (
+        <div className="field" role="group" aria-labelledby="scale-lbl">
+          <span className="lbl" id="scale-lbl">{t('signup.font')}</span>
+          <div className="seg">
+            {SCALES.map(s => (
               <button
-                type="button" key={l.value} role="radio" aria-checked={lang === l.value}
-                className="lang" onClick={() => pickLang(l)}
+                type="button" key={s.value} aria-pressed={scale === s.value}
+                onClick={() => { setScale(s.value); speak(t('font.changed', { x: t(`font.${s.value}`) })); }}
               >
-                <b lang={l.value}>{l.label}</b>
-                <small>{l.ko}</small>
+                <span className="gg" aria-hidden="true" style={{ fontSize: `${0.9 + (s.value - 1) * 1.6}em` }}>가</span>
+                <span>{t(`font.${s.value}`)}</span>
               </button>
             ))}
           </div>
-        )}
+        </div>
 
-        {cur.key === 'scale' && (
-          <>
-            <div className="sizes" role="radiogroup" aria-label="글씨 크기">
-              {SCALES.map(s => (
-                <button
-                  type="button" key={s.value} role="radio" aria-checked={scale === s.value} aria-pressed={scale === s.value}
-                  onClick={() => { setScale(s.value); speak(`${s.label}로 바꿨어요.`); }}
-                >
-                  <span className="gg" aria-hidden="true" style={{ fontSize: `${PREVIEW[s.value]}em` }}>가</span>
-                  <b style={{ fontSize: `${s.value}em` }}>{s.label}</b>
-                  {scale === s.value && <Icon name="check" className="ck" />}
-                </button>
-              ))}
-            </div>
-            <div className="card preview">
-              <small>이렇게 보여요</small>
-              <p>건강검진은 11월 20일 오전 9시예요. 신분증을 꼭 가져가세요.</p>
-            </div>
-          </>
-        )}
-
-        {cur.key === 'rate' && (
-          <div className="sizes" role="radiogroup" aria-label="목소리 빠르기">
+        <div className="field" role="group" aria-labelledby="rate-lbl">
+          <span className="lbl" id="rate-lbl">{t('signup.rate')}</span>
+          <div className="seg">
             {RATES.map(r => (
-              <button
-                type="button" key={r.value} role="radio" aria-checked={rate === r.value} aria-pressed={rate === r.value}
-                onClick={() => pickRate(r)}
-              >
-                <Icon name="speaker" className="gi" />
-                <b>{r.label}</b>
-                {rate === r.value && <Icon name="check" className="ck" />}
+              <button type="button" key={r.value} aria-pressed={rate === r.value} onClick={() => pickRate(r)}>
+                <Icon name="speaker" />
+                <span>{t(`rate.${r.value}`)}</span>
               </button>
             ))}
           </div>
-        )}
+          <span className="hint">{t('signup.rateHint')}</span>
+        </div>
 
-        {cur.key === 'me' && (
-          <>
-            <div className="field">
-              <label htmlFor="name">이름</label>
-              <input id="name" autoComplete="name" value={name} maxLength={30}
-                onChange={(e) => setName(e.target.value)} disabled={busy} />
-            </div>
-            <PhoneVerify
-              purpose="signup" phone={phone} setPhone={setPhone} code={code} setCode={setCode}
-              onSent={() => setSent(true)} onComplete={submit} onError={onPhoneError} disabled={busy}
-            />
-          </>
-        )}
+        <hr className="rule" />
+
+        <div className="field">
+          <label htmlFor="name">{t('signup.name')}</label>
+          <input id="name" autoComplete="name" value={name} maxLength={30}
+            onChange={(e) => setName(e.target.value)} disabled={busy} />
+        </div>
+
+        <PhoneVerify
+          purpose="signup" phone={phone} setPhone={setPhone} code={code} setCode={setCode}
+          onSent={() => setSent(true)} onComplete={submit} onError={onPhoneError} disabled={busy}
+        />
 
         {error && <p className="err" role="alert">{error}</p>}
 
-        <div className="grow" />
-        {step < 3 && <button className="btn primary" type="submit">다음</button>}
-        {step === 3 && sent && (
+        {sent && (
           <button className="btn red" type="submit" disabled={busy || code.length !== 6}>
-            {busy ? '가입하는 중…' : '가입하기'}
+            {busy ? t('signup.busy') : t('signup.btn')}
           </button>
         )}
       </form>
+
+      {langOpen && (
+        <ChoiceSheet
+          title={`${t('signup.lang')} · Language`} options={LANGS} value={lang}
+          onPick={(o) => setLang(o.value)} sub={(o) => o.ko} onClose={() => setLangOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 
 from . import sms
-from .db import DEMO_USER, connect, utc_now
+from .db import connect, utc_now
 
 LANGUAGES = ("ko", "en", "zh", "ja", "vi", "th", "id", "fil", "km", "my", "hi", "ne")
 Language = Literal["ko", "en", "zh", "ja", "vi", "th", "id", "fil", "km", "my", "hi", "ne"]
@@ -78,7 +78,7 @@ class SignupIn(PhoneIn):
     code: str
     language: Language = "ko"
     font_scale: float = 1.0
-    voice_rate: float = Field(default=0.92, ge=0.5, le=1.5)
+    voice_rate: float = Field(default=1.25, ge=0.5, le=1.6)
 
     @field_validator("name")
     @classmethod
@@ -98,7 +98,7 @@ class MePatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=30)
     language: Language | None = None
     font_scale: float | None = None
-    voice_rate: float | None = Field(default=None, ge=0.5, le=1.5)
+    voice_rate: float | None = Field(default=None, ge=0.5, le=1.6)
 
     @field_validator("font_scale")
     @classmethod
@@ -236,19 +236,6 @@ def signup(body: SignupIn):
             (body.name, body.phone, body.language, body.font_scale, body.voice_rate, utc_now()),
         )
         row = conn.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone()
-        token = _issue_token(conn, row["id"])
-    return {"token": token, "user": _public(row)}
-
-
-@router.post("/auth/demo-login")
-def demo_login():
-    """시연용 '체험하기'. 실제 배포에서는 TTOBAK_DEMO_LOGIN=0 으로 끕니다."""
-    if os.getenv("TTOBAK_DEMO_LOGIN", "1") != "1":
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
-    with connect() as conn:
-        row = conn.execute("SELECT * FROM users WHERE phone = ?", (DEMO_USER["phone"],)).fetchone()
-        if row is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "시연용 계정이 없어요.")
         token = _issue_token(conn, row["id"])
     return {"token": token, "user": _public(row)}
 

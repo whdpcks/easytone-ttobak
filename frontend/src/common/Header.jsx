@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../utils/icons';
 import { useUI } from './UIContext';
 import { useVoiceContext } from './VoiceContext';
+import { useT } from './i18n';
 
 export function HeaderButton({ icon, label, onClick, className = '', children, ...rest }) {
   return (
@@ -26,15 +27,16 @@ export function HeaderButton({ icon, label, onClick, className = '', children, .
 }
 
 const LEFT = {
-  back: { icon: 'back', label: '뒤로' },
-  close: { icon: 'x', label: '닫기' },
-  home: { icon: 'back', label: '홈' },
+  back: { icon: 'back', key: 'hdr.back' },
+  close: { icon: 'x', key: 'hdr.close' },
+  home: { icon: 'back', key: 'hdr.home' },
 };
 
 export default function Header({ left = 'back', onLeft, title = '', voiceText, right = null }) {
   const navigate = useNavigate();
   const { openFontSheet } = useUI();
   const { toggle, speaking } = useVoiceContext();
+  const t = useT();
 
   const handleLeft = onLeft || (() => {
     if (left === 'home') navigate('/home');
@@ -45,21 +47,21 @@ export default function Header({ left = 'back', onLeft, title = '', voiceText, r
   return (
     <header className={`hdr${right ? '' : ' centered'}`}>
       <div className="hdr-l">
-        {LEFT[left] && <HeaderButton icon={LEFT[left].icon} label={LEFT[left].label} onClick={handleLeft} />}
+        {LEFT[left] && <HeaderButton icon={LEFT[left].icon} label={t(LEFT[left].key)} onClick={handleLeft} />}
       </div>
 
       <div className="ttl">{title}</div>
 
       <div className="hdr-r">
-        <HeaderButton label="글씨" onClick={openFontSheet} aria-label="글씨 크기">
+        <HeaderButton label={t('hdr.font')} onClick={openFontSheet} aria-label={t('hdr.fontAria')}>
           <span className="gg" aria-hidden="true">가<small>가</small></span>
         </HeaderButton>
         <HeaderButton
           icon="speaker"
-          label={speaking ? '멈춤' : '소리'}
+          label={speaking ? t('hdr.stop') : t('hdr.sound')}
           className={speaking ? 'speaking' : ''}
           onClick={() => toggle(voiceText)}
-          aria-label={speaking ? '읽기 멈추기' : '다시 듣기'}
+          aria-label={speaking ? t('hdr.stopAria') : t('hdr.replayAria')}
           aria-pressed={speaking}
         />
         {right}

@@ -90,6 +90,7 @@ button { -webkit-user-select: none; user-select: none; }
   cursor: pointer; flex: none;
 }
 .ib svg { width: 24px; height: 24px; }
+.ib > span:last-child { max-width: 76px; text-align: center; line-height: 1.15; overflow-wrap: anywhere; }
 .ib .gg { font-family: var(--display); font-size: 1.5em; line-height: 1; letter-spacing: -.04em; }
 .ib .gg small { font-size: .65em; }
 .ib.speaking { border-color: var(--red); color: var(--red); }
@@ -254,25 +255,32 @@ h1.h { font-size: 1.55em; line-height: 1.3; margin: 4px 0 2px; text-wrap: balanc
 .sms-text b { font-weight: 800; letter-spacing: .04em; }
 .sms-hint { font-size: .8em; color: #0A7AFF; font-weight: 600; margin-top: 2px; }
 
-/* ── 회원가입 단계 ── */
-.steps { display: flex; align-items: center; gap: 6px; }
-.steps i { flex: 1; height: 6px; border-radius: 3px; background: var(--rule); }
-.steps i.on { background: var(--ink); }
-.steps span { font-size: .85em; font-weight: 700; color: var(--ink2); margin-left: 4px; white-space: nowrap; }
-.eyebrow { margin: 6px 0 -8px; font-weight: 700; color: var(--red); }
-.langs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.lang {
-  font: inherit; text-align: left; cursor: pointer;
-  min-height: 68px; padding: 8px 14px; border-radius: 16px;
+/* ── 회원가입 (한 화면) ── */
+.pre { white-space: pre-line; }
+.lbl-en { color: var(--ink2); font-weight: 500; }
+.picker {
+  font: inherit; font-size: 1.1em; cursor: pointer; text-align: left;
+  min-height: 60px; padding: 0 14px; border-radius: 14px;
   border: 2px solid var(--rule); background: #fff; color: var(--ink);
-  display: flex; flex-direction: column; justify-content: center; gap: 0;
+  display: flex; align-items: center; gap: 10px; width: 100%;
 }
-.lang b { font-size: 1.05em; line-height: 1.3; overflow-wrap: anywhere; }
-.lang small { color: var(--ink2); font-size: .8em; }
-.lang[aria-checked="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
-.lang[aria-checked="true"] small { color: rgba(255,255,255,.75); }
-.preview small { display: block; color: var(--ink2); font-weight: 700; font-size: .8em; margin-bottom: 4px; }
-.preview p { margin: 0; font-size: 1.05em; }
+.picker svg { width: 24px; height: 24px; flex: none; }
+.picker b { flex: 1; min-width: 0; }
+.picker .chev { color: var(--ink2); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.seg button {
+  font: inherit; font-weight: 700; cursor: pointer;
+  min-height: 72px; padding: 6px 4px; border-radius: 14px;
+  border: 2px solid var(--rule); background: #fff; color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  line-height: 1.2; text-align: center;
+}
+.seg button svg { width: 22px; height: 22px; }
+.seg .gg { font-family: var(--display); line-height: 1; height: 1.6em; display: flex; align-items: flex-end; }
+.seg button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
+hr.rule { border: 0; border-top: 2px dashed var(--rule); margin: 4px 0; width: 100%; }
+.opt-tx { display: flex; flex-direction: column; min-width: 0; }
+.opt-tx small { color: var(--ink2); font-size: .8em; }
 
 /* ── 시작 화면 ── */
 .splash { text-align: center; gap: 16px; }

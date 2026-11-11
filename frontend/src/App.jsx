@@ -43,15 +43,15 @@ export default function App() {
               <Route path="/me" element={auth(<Me />)} />
 
               {/* B: 촬영 → 로딩·도장 */}
-              <Route path="/camera" element={auth(<ComingSoon title="문서 촬영" owner="B" />)} />
-              <Route path="/loading/:docId" element={auth(<ComingSoon title="읽는 중" owner="B" />)} />
+              <Route path="/camera" element={auth(<ComingSoon screen="camera" owner="B" />)} />
+              <Route path="/loading/:docId" element={auth(<ComingSoon screen="loading" owner="B" />)} />
 
               {/* C: 결과 */}
-              <Route path="/result/:docId" element={auth(<ComingSoon title="분석 결과" owner="C" />)} />
+              <Route path="/result/:docId" element={auth(<ComingSoon screen="result" owner="C" />)} />
 
               {/* D: 보관함 · 상세 */}
-              <Route path="/archive" element={auth(<ComingSoon title="보관함" owner="D" />)} />
-              <Route path="/detail/:docId/:type" element={auth(<ComingSoon title="자세히 보기" owner="D" />)} />
+              <Route path="/archive" element={auth(<ComingSoon screen="archive" owner="D" />)} />
+              <Route path="/detail/:docId/:type" element={auth(<ComingSoon screen="detail" owner="D" />)} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
