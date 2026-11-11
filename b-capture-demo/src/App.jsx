@@ -12,6 +12,8 @@ export default function App() {
       if (photo) URL.revokeObjectURL(photo.url)
     }
   }, [photo])
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
@@ -50,36 +52,76 @@ export default function App() {
   }
 
   function takePhoto() {
-  const video = videoRef.current
+    const video = videoRef.current
 
-  if (!video?.videoWidth || !video.videoHeight) {
-    setError('카메라 화면이 보이면 다시 찍어주세요.')
-    return
-  }
-
-  setError('')
-
-  // 현재 영상 한 장을 실제 영상 크기 그대로 복사한다.
-  const canvas = document.createElement('canvas')
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
-  canvas.getContext('2d').drawImage(video, 0, 0)
-
-  // 복사한 화면을 JPEG로 만들고 미리보기 주소를 만든다.
-  canvas.toBlob((blob) => {
-    if (!blob) {
-      setError('사진을 찍지 못했어요. 다시 눌러주세요.')
+    if (!video?.videoWidth || !video.videoHeight) {
+      setError('카메라 화면이 보이면 다시 찍어주세요.')
       return
     }
 
-    setPhoto({
-      blob,
-      url: URL.createObjectURL(blob),
-      width: canvas.width,
-      height: canvas.height,
-    })
-  }, 'image/jpeg', 0.95)
-}
+    setError('')
+
+    // 현재 영상 한 장을 실제 영상 크기 그대로 복사한다.
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0)
+
+    // 복사한 화면을 JPEG로 만들고 미리보기 주소를 만든다.
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        setError('사진을 찍지 못했어요. 다시 눌러주세요.')
+        return
+      }
+
+      setPhoto({
+        blob,
+        url: URL.createObjectURL(blob),
+        width: canvas.width,
+        height: canvas.height,
+      })
+      setSaved(false)
+    }, 'image/jpeg', 0.95)
+  }
+
+  async function savePhoto() {
+    if (!photo || saving || saved) return
+
+    setSaving(true)
+    setError('')
+
+    try {
+      // 사진을 담을 문서 번호를 발급받는다.
+      const documentResponse = await fetch('/documents', {
+        method: 'POST',
+      })
+
+      if (!documentResponse.ok) {
+        throw new Error('문서를 만들지 못했어요.')
+      }
+
+      const { id } = await documentResponse.json()
+
+      // 찍은 JPEG를 file이라는 이름으로 보낸다.
+      const form = new FormData()
+      form.append('file', photo.blob, 'capture.jpg')
+
+      const uploadResponse = await fetch(`/documents/${id}/pages`, {
+        method: 'POST',
+        body: form,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('사진을 저장하지 못했어요.')
+      }
+
+      setSaved(true)
+    } catch {
+      setError('사진을 저장하지 못했어요. 서버 연결을 확인하고 다시 눌러주세요.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <main>
@@ -95,8 +137,8 @@ export default function App() {
         muted
         style={{ display: 'block', width: '100%', maxWidth: 480 }}
       />
-      <button type="button" onClick={takePhoto} disabled={status !== 'on'}>
-       찍기
+      <button type="button" onClick={takePhoto} disabled={status !== 'on' || saving}>
+        찍기
       </button>
 
       {photo && (
@@ -104,8 +146,15 @@ export default function App() {
           <h2>1장 찍었어요</h2>
           <img src={photo.url} alt="찍은 문서" style={{ width: '100%', maxWidth: 480 }} />
           <p>사진 크기 {photo.width} × {photo.height}px</p>
-       </section>
-)}
+          <button
+            type="button"
+            onClick={savePhoto}
+            disabled={saving || saved}
+          >
+            {saving ? '저장하는 중' : saved ? '사진 저장 완료' : '사진 저장'}
+          </button>
+        </section>
+      )}
     </main>
   )
 }
