@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
+import SoundButton from '../components/SoundButton';
 import { CAT_CONFIG, CATEGORIES, SUGGESTIONS } from '../utils/catConfig';
 import { getDocuments, searchDocuments } from '../api/documents';
 
@@ -37,17 +38,16 @@ export default function Archive() {
     }
   }
 
-  /* 화면 진입 음성 */
+  /* 화면 안내 음성 */
+  const guide = !searchResult
+    ? '보관함이에요. 찾고 싶은 것을 적거나, 추천 검색어를 눌러주세요.'
+    : searchResult.results.length
+      ? `"${searchResult.query}"와 관련된 문서를 ${searchResult.results.length}개 찾았어요. ${searchResult.results.map(r => r.doc?.title).join(', ')}.`
+      : '관련된 문서를 못 찾았어요.';
+
   useEffect(() => {
-    if (searchResult) {
-      const n = searchResult.results.length;
-      speak(n
-        ? `"${searchResult.query}"와 관련된 문서를 ${n}개 찾았어요. ${searchResult.results.map(r => r.doc?.title).join(', ')}.`
-        : `관련된 문서를 못 찾았어요.`);
-    } else {
-      speak(`보관함이에요. 찾고 싶은 것을 적거나, 추천 검색어를 눌러주세요.`);
-    }
-  }, [searchResult]);
+    speak(guide);
+  }, [guide]);
 
   /* AI 검색 실행 */
   async function doSearch(q) {
@@ -99,6 +99,7 @@ export default function Archive() {
         <button className="ib" onClick={() => navigate('/me')} aria-label="내 정보">
           <Icon name="user" /><span>내정보</span>
         </button>
+        <SoundButton guide={guide} />
       </div>
 
       <div className="body">

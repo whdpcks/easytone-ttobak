@@ -2,6 +2,7 @@
 const paths = {
   back:    <path d="M15 5l-7 7 7 7"/>,
   speaker: <><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></>,
+  mute:    <><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></>,
   search:  <><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></>,
   mic:     <><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></>,
   user:    <><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></>,

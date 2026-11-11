@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
+import SoundButton from '../components/SoundButton';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { getDocument } from '../api/documents';
 import { formatDay, formatTime } from '../utils/datetime';
@@ -58,9 +59,7 @@ export default function Result() {
           <Icon name="back" /><span>뒤로</span>
         </button>
         <div className="ttl" />
-        <button className="ib" onClick={() => speak(intro)} aria-label="다시 듣기">
-          <Icon name="speaker" /><span>소리</span>
-        </button>
+        <SoundButton guide={intro} />
       </div>
 
       <div className="body">
