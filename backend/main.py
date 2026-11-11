@@ -4,8 +4,9 @@
 실행 (backend 폴더에서):
     uvicorn main:app --reload --port 8000
 
-각 담당 라우터는 아래 "라우터 연결" 구역에서 붙입니다.
-아직 main에 들어오지 않은 모듈은 import에 실패해도 앱이 뜨도록 건너뜁니다.
+공통 라우터는 아래 "라우터 연결" 구역에서 붙입니다.
+현재 A 인증, B 촬영, C 분석/결과를 연결했습니다.
+아직 병합되지 않은 D 라우터는 import에 실패해도 앱이 뜨도록 건너뜁니다.
 """
 import logging
 import os
@@ -54,6 +55,9 @@ app.include_router(tts.router)
 # B: 공통 DB와 A의 Bearer 인증으로 촬영 문서를 저장한다.
 from b_capture.router import create_capture_router
 from b_capture.storage import CaptureStore
+from c_analysis.integration import create_capture_analysis_handler
+from c_analysis.router import create_analysis_router
+from c_analysis.storage import SQLiteAnalysisStore
 
 
 def capture_owner(user: dict = Depends(auth.get_current_user)) -> str:
@@ -64,24 +68,18 @@ capture_store = CaptureStore(db_path(), Path(os.getenv("TTOBAK_DATA_DIR", "data"
 app.state.capture_store = capture_store
 
 
-# C: 분석 상태·결과 — 소유권 검사(require_document_owner)를 붙여서만 연결
-try:
-    from c_analysis.router import create_analysis_router
-    from c_analysis.storage import SQLiteAnalysisStore
-
-    app.include_router(
-        create_analysis_router(
-            SQLiteAnalysisStore(db_path()),
-            authorize_document_dependency=auth.require_document_owner,
-        )
-    )
-except ImportError:
-    log.info("c_analysis 모듈이 아직 없어 분석 라우터를 건너뜁니다.")
-
-# C가 자체 상태 조회를 제공하면 같은 경로를 중복 등록하지 않는다.
-_has_analysis_status = any(getattr(route, "path", None) == "/documents/{document_id}/status" for route in app.routes)
+# C: 분석은 B의 finish 콜백에서 시작하며, 결과 조회는 A의 소유권 검사를 거칩니다.
+# 상태 조회는 B의 단일 API에서 C의 상태를 합쳐 제공합니다.
+analysis_store = SQLiteAnalysisStore(db_path())
+app.state.analysis_store = analysis_store
+app.include_router(create_analysis_router(
+    analysis_store, authorize_document_dependency=auth.require_document_owner,
+))
 app.include_router(create_capture_router(
-    capture_store, require_owner=capture_owner, include_status=not _has_analysis_status,
+    capture_store,
+    require_owner=capture_owner,
+    analyze=create_capture_analysis_handler(analysis_store),
+    analysis_status=analysis_store.status,
 ))
 
 # D: 보관함 목록 · AI 검색
