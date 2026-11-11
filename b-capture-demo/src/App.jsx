@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import './capture.css'
 import useAutoCapture from './useAutoCapture'
+import DocumentProcessing from './DocumentProcessing'
+import CaptureIntro from './CaptureIntro'
 
 export default function App() {
   const videoRef = useRef(null)
   const guideRef = useRef(null)
   const confirmationRef = useRef(null)
   const [captureConfirmation, setCaptureConfirmation] = useState(false)
-  const [autoCapture, setAutoCapture] = useState(true)
+  const [showIntro, setShowIntro] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [awaitingNext, setAwaitingNext] = useState(false)
-  const [status, setStatus] = useState('off')
+  const [status, setStatus] = useState('opening')
   const [error, setError] = useState('')
 
   const [photos, setPhotos] = useState([])
@@ -21,15 +23,50 @@ export default function App() {
   const mounted = useRef(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [processing, setProcessing] = useState(null)
+  const [uploadStep, setUploadStep] = useState(0)
 
   useEffect(() => {
     const video = videoRef.current
+    let cancelled = false
+    let cameraStream
     mounted.current = true
+    setStatus('opening')
+    setError('')
+
+    async function openCamera() {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 2560 },
+            height: { ideal: 1920 },
+          },
+          audio: false,
+        })
+        if (cancelled) {
+          cameraStream.getTracks().forEach((track) => track.stop())
+          return
+        }
+        video.srcObject = cameraStream
+        await video.play()
+        if (!cancelled) setStatus('on')
+      } catch (error) {
+        cameraStream?.getTracks().forEach((track) => track.stop())
+        if (cancelled) return
+        setStatus('off')
+        setError(error.name === 'NotAllowedError'
+          ? '카메라 권한을 허용한 뒤 새로고침해주세요.'
+          : '카메라를 열 수 없어요. 카메라 연결을 확인하고 새로고침해주세요.')
+      }
+    }
+    openCamera()
 
     return () => {
+      cancelled = true
       mounted.current = false
-      // 화면을 나가면 카메라와 사진 미리보기 자원을 정리한다.
-      video?.srcObject?.getTracks().forEach((track) => track.stop())
+      cameraStream?.getTracks().forEach((track) => track.stop())
+      if (video.srcObject === cameraStream) video.srcObject = null
       photoUrls.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
@@ -48,37 +85,6 @@ export default function App() {
   function finishCapture() {
     setCaptureConfirmation(false)
     savePhotos()
-  }
-
-  async function startCamera() {
-    const video = videoRef.current
-    setStatus('opening')
-    setError('')
-
-    try {
-      // 브라우저에 카메라 영상을 요청한다.
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 2560 },
-          height: { ideal: 1920 },
-        },
-        audio: false,
-      })
-
-      if (videoRef.current !== video) {
-        stream.getTracks().forEach((track) => track.stop())
-        return
-      }
-
-      // 받은 영상을 화면의 video 요소에 연결한다.
-      video.srcObject = stream
-      setStatus('on')
-    } catch (err) {
-      console.error(err)
-      setStatus('off')
-      setError('카메라를 열 수 없어요. 브라우저의 카메라 권한을 확인해주세요.')
-    }
   }
 
   function takePhoto() {
@@ -126,7 +132,7 @@ export default function App() {
   const detection = useAutoCapture({
     videoRef,
     guideRef,
-    enabled: status === 'on' && autoCapture && !awaitingNext && !saving && !capturing,
+    enabled: status === 'on' && !showIntro && !awaitingNext && !saving && !capturing,
     onCapture: () => {
       setAwaitingNext(true)
       takePhoto()
@@ -142,10 +148,11 @@ export default function App() {
     positioning: '종이가 빨간 테두리 안에 들어오도록 맞춰주세요.',
     blurry: '글씨가 선명해지도록 초점을 맞춰주세요.',
     steady: '좋아요. 잠깐 그대로 계시면 자동으로 찍어요.',
-    error: '자동 촬영을 준비하지 못했어요. 직접 찍기를 눌러주세요.',
+    error: '자동 촬영을 준비하지 못했어요. 새로고침해서 다시 시도해주세요.',
   }
-  let cameraHint = '카메라를 켜고 종이를 빨간 테두리 안에 맞춰주세요.'
-  if (status === 'on') cameraHint = autoCapture ? hints[detection.state] : '종이를 맞추고 직접 찍기를 눌러주세요.'
+  let cameraHint = status === 'opening' ? '카메라를 준비하고 있어요. 권한 요청이 나오면 허용해주세요.' : '카메라 연결과 권한을 확인해주세요.'
+  if (status === 'on') cameraHint = hints[detection.state]
+  if (showIntro && status === 'on') cameraHint = '촬영 방법을 안내하고 있어요.'
   if (capturing) cameraHint = '사진을 찍고 있어요.'
   if (awaitingNext && !capturing) cameraHint = '찍었어요. 끝내거나 다음 서류를 찍을 수 있어요.'
   if (saving) cameraHint = '찍은 사진을 저장하고 있어요.'
@@ -157,6 +164,8 @@ export default function App() {
     busy.current = true
     setSaving(true)
     setError('')
+    setProcessing('saving')
+    setUploadStep(0)
 
     try {
       // 여러 장을 같은 문서에 저장할 수 있도록 문서 번호를 기억한다.
@@ -167,6 +176,7 @@ export default function App() {
         documentId.current = id
       }
 
+      setUploadStep(1)
       for (const [index, photo] of photos.entries()) {
         // 저장 완료 응답을 받은 사진은 다음 저장에서 건너뛴다.
         if (uploadedPhotos.current.has(photo.url)) continue
@@ -181,8 +191,12 @@ export default function App() {
         uploadedPhotos.current.add(photo.url)
       }
 
+      setUploadStep(2)
+      if (!mounted.current) return
       setSaved(true)
+      setProcessing('completed')
     } catch {
+      setProcessing(null)
       setError('사진을 모두 저장하지 못했어요. 서버 연결을 확인하고 다시 눌러주세요.')
     } finally {
       busy.current = false
@@ -191,11 +205,7 @@ export default function App() {
   }
 
   return (
-    <main>
-      <button type="button" onClick={startCamera} disabled={status !== 'off'}>
-        {{ off: '카메라 켜기', opening: '카메라 여는 중', on: '카메라 켜짐' }[status]}
-      </button>
-      {error && <p role="alert">{error}</p>}
+    <main className="capture-app">
       <div className="camera-preview">
         <h1 className="camera-title">문서 촬영</h1>
         <video
@@ -205,7 +215,7 @@ export default function App() {
           muted
           aria-label="문서 촬영 카메라"
         />
-        {autoCapture && !awaitingNext && detection.corners && (
+        {!awaitingNext && detection.corners && (
           <svg className="document-outline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <polygon points={detection.corners.map((point) => `${point.x},${point.y}`).join(' ')} />
           </svg>
@@ -213,9 +223,29 @@ export default function App() {
         <div className="camera-overlay" aria-hidden="true">
           <div
             ref={guideRef}
-            className={`a4-guide${autoCapture && !awaitingNext && detection.state === 'steady' ? ' is-ready' : ''}`}
+            className={`a4-guide${!awaitingNext && detection.state === 'steady' ? ' is-ready' : ''}`}
           />
         </div>
+        <div className="camera-photos" aria-label="촬영 안내와 장 수">
+          <p className="camera-hint" role={error ? 'alert' : 'status'}>{error || cameraHint}</p>
+          {status === 'on' && !showIntro && !awaitingNext && !error && (
+            <progress className="capture-progress" value={detection.progress} max="1" aria-label="자동 촬영 준비" />
+          )}
+          <p className="camera-photo-count" role="status">{photos.length}장 찍었어요</p>
+        </div>
+        {showIntro && status === 'on' && (
+          <CaptureIntro onComplete={() => setShowIntro(false)} />
+        )}
+        {processing && (
+          <DocumentProcessing
+            step={uploadStep}
+            completed={processing === 'completed'}
+            title="종이 보관 중"
+            heading={'찍은 사진을\n보관하고 있어요'}
+            steps={['문서 준비', '사진 저장', '보관 마무리']}
+            onStampFinished={() => setProcessing(null)}
+          />
+        )}
         <dialog
           ref={confirmationRef}
           className="capture-confirmation"
@@ -232,39 +262,10 @@ export default function App() {
           </div>
         </dialog>
       </div>
-      <p className="camera-hint" role="status">{cameraHint}</p>
-      {status === 'on' && autoCapture && !awaitingNext && (
-        <progress className="capture-progress" value={detection.progress} max="1" aria-label="자동 촬영 준비" />
-      )}
-      <div className="capture-controls">
-        <label>
-          <input type="checkbox" checked={autoCapture} onChange={(event) => setAutoCapture(event.target.checked)} />
-          자동 촬영
-        </label>
-      </div>
-      <button type="button" onClick={takePhoto} disabled={status !== 'on' || saving || capturing}>
-        직접 찍기
-      </button>
-
-      <p role="status">{photos.length}장 찍었어요</p>
-      {photos.length > 0 && (
-        <section aria-label="찍은 사진">
-          {photos.map((photo, index) => (
-            <div key={photo.url}>
-              <img
-                src={photo.url}
-                alt={`찍은 문서 ${index + 1}장째`}
-                style={{ width: '100%', maxWidth: 240 }}
-              />
-              <p>{index + 1}장째 · {photo.width} × {photo.height}px</p>
-            </div>
-          ))}
-          {error && !saved && !captureConfirmation && (
-            <button type="button" onClick={savePhotos} disabled={saving || capturing}>
-              {saving ? '저장하는 중' : '다시 저장'}
-            </button>
-          )}
-        </section>
+      {error && photos.length > 0 && !saved && !captureConfirmation && (
+        <button type="button" onClick={savePhotos} disabled={saving || capturing}>
+          {saving ? '저장하는 중' : '다시 저장'}
+        </button>
       )}
     </main>
   )
