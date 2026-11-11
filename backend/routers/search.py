@@ -8,7 +8,8 @@ D 담당 — GET /search?q=검색어  → [{id, reason, doc}]
   3. LLM 호출 실패 시 플랜 B: 카테고리 동의어 사전으로 키워드 검색
 """
 import os, json, re
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from common.auth import get_current_user
 from database import completed_documents
 from openai import OpenAI
 
@@ -109,9 +110,9 @@ def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
 
 
 @router.get("")
-def search(q: str):
-    """AI 검색 — [{id, reason, doc}], doc은 C의 결과 JSON 그대로"""
-    doc_list = completed_documents()
+def search(q: str, user: dict = Depends(get_current_user)):
+    """AI 검색 — 내 문서 중에서 [{id, reason, doc}], doc은 C의 결과 JSON 그대로"""
+    doc_list = completed_documents(user["id"])
 
     if not doc_list:
         return []

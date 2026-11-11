@@ -49,7 +49,7 @@ app = create_app(
 
 ## A의 공통 앱 연결
 
-`create_capture_router(store, require_owner=...)`에 로그인한 사용자 ID 문자열을 반환하는 함수를 전달합니다. 문서별 소유권 검사는 B 저장소가 처리합니다. C의 조회 라우터를 함께 사용할 때는 B 라우터에 `include_status=False`를 지정해 상태 주소 중복을 피합니다. 문서 분석 결과 `GET /documents/{id}`는 C가 제공합니다.
+`create_capture_router(store, require_owner=...)`에 로그인한 사용자 번호(`users.id`)를 반환하는 함수를 전달합니다. 문서 주인은 `documents.user_id`에 저장되어 A의 `require_document_owner`가 그대로 검사합니다. C의 조회 라우터를 함께 사용할 때는 B 라우터에 `include_status=False`를 지정해 상태 주소 중복을 피합니다. 문서 분석 결과 `GET /documents/{id}`는 C가 제공합니다.
 
 ## 검증
 

@@ -87,7 +87,7 @@ class CaptureTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 201)
         self.assertEqual((page["width"], page["height"]), (1000, 2000))
         restarted = create_app(data_dir=self.root)
-        paths = restarted.state.capture_store.page_paths(document_id, "local-dev")
+        paths = restarted.state.capture_store.page_paths(document_id, 1)
         self.assertEqual(len(paths), 1)
         with Image.open(paths[0]) as image:
             self.assertEqual(image.format, "JPEG")
@@ -108,7 +108,7 @@ class CaptureTests(unittest.IsolatedAsyncioTestCase):
         ])
         self.assertEqual([response[0] for response in responses], [201, 201])
         self.assertEqual([response[1]["page_number"] for response in responses], [1, 1])
-        self.assertEqual(len(self.app.state.capture_store.page_paths(document_id, "local-dev")), 1)
+        self.assertEqual(len(self.app.state.capture_store.page_paths(document_id, 1)), 1)
         status, _ = await request(self.app, "POST", f"/documents/{document_id}/pages", photo=image_bytes((200, 100)), page_id=page_id)
         self.assertEqual(status, 409)
 
@@ -120,7 +120,7 @@ class CaptureTests(unittest.IsolatedAsyncioTestCase):
         for page_id in [first_id, str(uuid4())]:
             status, page = await request(self.app, "POST", f"/documents/{document_id}/pages", photo=image_bytes(), page_id=page_id)
             self.assertEqual(status, 201)
-        paths = self.app.state.capture_store.page_paths(document_id, "local-dev")
+        paths = self.app.state.capture_store.page_paths(document_id, 1)
         self.assertEqual(paths[0].name, f"{first_id}.jpg")
         for _ in range(2):
             status, result = await request(self.app, "POST", f"/documents/{document_id}/finish")
@@ -138,7 +138,7 @@ class CaptureTests(unittest.IsolatedAsyncioTestCase):
         for payload, expected in [(b"not an image", 400), (b"", 400), (b"x" * (10 * 1024 * 1024 + 1), 413)]:
             status, _ = await request(self.app, "POST", f"/documents/{document_id}/pages", photo=payload)
             self.assertEqual(status, expected)
-        other = create_app(data_dir=self.root, require_owner=lambda: "another-user")
+        other = create_app(data_dir=self.root, require_owner=lambda: 2)
         for method, suffix in [("GET", "status"), ("POST", "finish")]:
             status, _ = await request(other, method, f"/documents/{document_id}/{suffix}")
             self.assertEqual(status, 404)
@@ -150,7 +150,7 @@ class CaptureTests(unittest.IsolatedAsyncioTestCase):
         with patch("b_capture.storage.os.replace", side_effect=OSError("disk unavailable")):
             with self.assertRaises(OSError):
                 await request(self.app, "POST", f"/documents/{document_id}/pages", photo=image_bytes())
-        self.assertEqual(self.app.state.capture_store.page_paths(document_id, "local-dev"), [])
+        self.assertEqual(self.app.state.capture_store.page_paths(document_id, 1), [])
         self.assertEqual(list((self.root / "uploads" / str(document_id)).iterdir()), [])
 
     async def test_analysis_callback_receives_ordered_paths_once(self):

@@ -1,28 +1,19 @@
 """
-시연용 샘플 문서 7개를 C의 c_document_analyses 테이블에 완료 상태로 넣습니다.
-실행: python seed.py   (다시 실행해도 이미 있는 번호는 건너뜁니다)
+시연용 샘플 문서 7개를 시연 사용자(A의 DEMO_USER, 010-1234-5678)의 문서로 넣습니다.
+  - B의 documents: 문서 주인(user_id)
+  - C의 c_document_analyses: 분석이 끝난 결과
+실행 (backend 폴더에서): python seed.py   (다시 실행해도 이미 있는 번호는 건너뜁니다)
 """
 import json
-import sqlite3
-from contextlib import closing
 from datetime import datetime, timezone
 
+from b_capture.storage import CaptureStore
+from c_analysis.storage import SQLiteAnalysisStore
+from common.db import DEMO_USER, connect, init_db
 from database import DB_PATH
 
-# 실제 문서 번호와 겹치면 C의 분석 시작(INSERT OR IGNORE)이 무시되므로 큰 번호를 씁니다.
+# 실제 촬영 문서 번호와 겹치지 않게 큰 번호를 씁니다.
 FIRST_ID = 9001
-
-# C의 backend/c_analysis/storage.py 의 _SCHEMA와 같아야 합니다.
-C_SCHEMA = """
-CREATE TABLE IF NOT EXISTS c_document_analyses (
-    document_id INTEGER PRIMARY KEY,
-    status TEXT NOT NULL CHECK(status IN ('processing', 'completed', 'failed')),
-    step TEXT CHECK(step IN ('ocr', 'ai', 'saving') OR step IS NULL),
-    result_json TEXT,
-    error TEXT,
-    updated_at TEXT NOT NULL
-);
-"""
 
 SAMPLES = [
     {
@@ -194,12 +185,21 @@ SAMPLES = [
 
 
 def run():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    # 각 담당 코드로 테이블을 만듭니다: A(users), B(documents·pages), C(c_document_analyses)
+    init_db(seed_demo=True)
+    CaptureStore(DB_PATH, DB_PATH.parent / "uploads")
+    SQLiteAnalysisStore(DB_PATH)
+
     now = datetime.now(timezone.utc).isoformat()
     inserted = 0
-    with closing(sqlite3.connect(DB_PATH, timeout=10)) as conn, conn:
-        conn.executescript(C_SCHEMA)
+    with connect() as conn:
+        user_id = conn.execute("SELECT id FROM users WHERE phone = ?", (DEMO_USER["phone"],)).fetchone()[0]
         for document_id, sample in enumerate(SAMPLES, start=FIRST_ID):
+            conn.execute(
+                "INSERT OR IGNORE INTO documents (id, user_id, status, created_at, analysis_requested_at) "
+                "VALUES (?, ?, 'queued', ?, ?)",
+                (document_id, user_id, now, now),
+            )
             result = {"id": document_id, "status": "completed", **sample}
             cursor = conn.execute(
                 "INSERT OR IGNORE INTO c_document_analyses "
