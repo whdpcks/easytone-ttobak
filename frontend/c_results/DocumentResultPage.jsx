@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildResultTiles } from './resultTiles.mjs';
+import { buildResultTiles, getVoiceDescription } from './resultTiles.mjs';
 import './DocumentResultPage.css';
 
 /**
@@ -59,6 +59,12 @@ export default function DocumentResultPage({
   }, [documentId, loadDocument, revision]);
 
   const tiles = useMemo(() => buildResultTiles(document), [document]);
+
+  useEffect(() => {
+    if (!document || typeof announce !== 'function') return undefined;
+    const cleanup = announce(getVoiceDescription(document));
+    return typeof cleanup === 'function' ? cleanup : undefined;
+  }, [document, announce]);
 
   return (
     <main className="ttobak-c-result" aria-busy={loading}>

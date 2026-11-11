@@ -37,3 +37,7 @@ export function buildResultTiles(document) {
   return tiles.filter(tile => nonEmpty(tile.value));
 }
 
+export function getVoiceDescription(document) {
+  if (!document?.title) return '';
+  return `${document.title}이에요. 보고 싶은 내용을 눌러주세요.`;
+}
