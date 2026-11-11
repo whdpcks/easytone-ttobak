@@ -1,0 +1,95 @@
+.camera-preview {
+  position: relative;
+  width: calc(100% - 24px);
+  max-width: 480px;
+  aspect-ratio: 3 / 4;
+  margin: 16px auto 0;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 12px;
+  background: #151515;
+}
+
+.camera-preview video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.a4-guide {
+  box-sizing: border-box;
+  width: 82%;
+  aspect-ratio: 210 / 297;
+  border: 3px solid #ff4545;
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 60%);
+}
+
+.camera-hint {
+  max-width: 480px;
+  margin: 12px auto;
+  padding-inline: 12px;
+}
+
+.a4-guide.is-ready {
+  border-color: #27d66f;
+}
+
+.capture-progress {
+  display: block;
+  width: min(80%, 360px);
+  height: 8px;
+  margin: 8px auto 16px;
+  accent-color: #178d46;
+}
+
+.capture-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px;
+}
+
+.capture-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.capture-controls input {
+  width: 22px;
+  height: 22px;
+}
+
+.capture-controls button {
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.document-outline {
+  transform: scaleX(-1);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.document-outline polygon {
+  fill: rgb(255 216 65 / 8%);
+  stroke: #ffd841;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}

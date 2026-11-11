@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import './capture.css'
+import useAutoCapture from './useAutoCapture'
 
 export default function App() {
   const videoRef = useRef(null)
+  const guideRef = useRef(null)
+  const [autoCapture, setAutoCapture] = useState(true)
+  const [awaitingNext, setAwaitingNext] = useState(false)
   const [status, setStatus] = useState('off')
   const [error, setError] = useState('')
 
@@ -35,7 +40,11 @@ export default function App() {
     try {
       // 브라우저에 카메라 영상을 요청한다.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 2560 },
+          height: { ideal: 1920 },
+        },
         audio: false,
       })
 
@@ -91,8 +100,35 @@ export default function App() {
         { blob, url, width: canvas.width, height: canvas.height },
       ])
       setSaved(false)
+      setAwaitingNext(true)
     }, 'image/jpeg', 0.95)
   }
+
+  const detection = useAutoCapture({
+    videoRef,
+    guideRef,
+    enabled: status === 'on' && autoCapture && !awaitingNext && !saving && !capturing,
+    onCapture: () => {
+      setAwaitingNext(true)
+      takePhoto()
+    },
+  })
+
+  const hints = {
+    loading: '자동 촬영을 준비하고 있어요.',
+    waiting: '카메라 영상이 보이는지 확인해주세요.',
+    dark: '화면이 너무 어두워요. 종이가 보이도록 조명을 밝혀주세요.',
+    small: '종이를 조금 더 가까이 가져와주세요.',
+    searching: '빨간 테두리 안에 종이 네 모서리를 맞춰주세요.',
+    positioning: '종이가 빨간 테두리 안에 들어오도록 맞춰주세요.',
+    blurry: '글씨가 선명해지도록 초점을 맞춰주세요.',
+    steady: '좋아요. 잠깐 그대로 계시면 자동으로 찍어요.',
+    error: '자동 촬영을 준비하지 못했어요. 직접 찍기를 눌러주세요.',
+  }
+  let cameraHint = '카메라를 켜고 종이를 빨간 테두리 안에 맞춰주세요.'
+  if (status === 'on') cameraHint = autoCapture ? hints[detection.state] : '종이를 맞추고 직접 찍기를 눌러주세요.'
+  if (capturing) cameraHint = '사진을 찍고 있어요.'
+  if (awaitingNext && !capturing) cameraHint = '찍었어요. 다음 종이를 준비하고 다음 서류를 눌러주세요.'
 
   async function savePhotos() {
     if (photos.length === 0 || busy.current || saved) return
@@ -140,15 +176,43 @@ export default function App() {
         {{ off: '카메라 켜기', opening: '카메라 여는 중', on: '카메라 켜짐' }[status]}
       </button>
       {error && <p role="alert">{error}</p>}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        style={{ display: 'block', width: '100%', maxWidth: 480 }}
-      />
+      <div className="camera-preview">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          aria-label="문서 촬영 카메라"
+        />
+        {autoCapture && !awaitingNext && detection.corners && (
+          <svg className="document-outline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polygon points={detection.corners.map((point) => `${point.x},${point.y}`).join(' ')} />
+          </svg>
+        )}
+        <div className="camera-overlay" aria-hidden="true">
+          <div
+            ref={guideRef}
+            className={`a4-guide${autoCapture && !awaitingNext && detection.state === 'steady' ? ' is-ready' : ''}`}
+          />
+        </div>
+      </div>
+      <p className="camera-hint" role="status">{cameraHint}</p>
+      {status === 'on' && autoCapture && !awaitingNext && (
+        <progress className="capture-progress" value={detection.progress} max="1" aria-label="자동 촬영 준비" />
+      )}
+      <div className="capture-controls">
+        <label>
+          <input type="checkbox" checked={autoCapture} onChange={(event) => setAutoCapture(event.target.checked)} />
+          자동 촬영
+        </label>
+        {awaitingNext && (
+          <button type="button" onClick={() => setAwaitingNext(false)} disabled={saving || capturing}>
+            다음 서류
+          </button>
+        )}
+      </div>
       <button type="button" onClick={takePhoto} disabled={status !== 'on' || saving || capturing}>
-        찍기
+        직접 찍기
       </button>
 
       <p role="status">{photos.length}장 찍었어요</p>
