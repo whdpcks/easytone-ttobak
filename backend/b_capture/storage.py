@@ -20,6 +20,7 @@ class CaptureStore:
                 CREATE TABLE IF NOT EXISTS documents (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     owner_id TEXT NOT NULL,
+                    user_id INTEGER,
                     request_key TEXT,
                     status TEXT NOT NULL DEFAULT 'capturing'
                         CHECK(status IN ('capturing', 'queued')),
@@ -41,6 +42,14 @@ class CaptureStore:
                     UNIQUE(document_id, page_number)
                 );
             """)
+
+        # 기존 B 개발 DB에도 A의 공통 소유권 검사 열을 추가한다.
+        with self._db(write=True) as connection:
+            columns = {row["name"] for row in connection.execute("PRAGMA table_info(documents)")}
+            if "user_id" not in columns:
+                connection.execute("ALTER TABLE documents ADD COLUMN user_id INTEGER")
+            connection.execute("UPDATE documents SET user_id = CAST(owner_id AS INTEGER) "
+                               "WHERE user_id IS NULL AND owner_id != '' AND owner_id NOT GLOB '*[^0-9]*'")
 
     @contextmanager
     def _db(self, *, write: bool = False):
@@ -76,8 +85,8 @@ class CaptureStore:
                 if existing:
                     return existing["id"]
             cursor = connection.execute(
-                "INSERT INTO documents (owner_id, request_key, created_at) VALUES (?, ?, ?)",
-                (owner_id, request_key, datetime.now(timezone.utc).isoformat()),
+                "INSERT INTO documents (owner_id, user_id, request_key, created_at) VALUES (?, ?, ?, ?)",
+                (owner_id, int(owner_id) if str(owner_id).isdigit() else None, request_key, datetime.now(timezone.utc).isoformat()),
             )
             return cursor.lastrowid
 
