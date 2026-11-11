@@ -1,0 +1,17 @@
+{
+  "id": 13,
+  "status": "completed",
+  "title": "학교 체험학습 안내",
+  "sender": "우리초등학교",
+  "category": "학교·아이",
+  "created_at": "2026-11-10",
+  "summary": [
+    "학교에서 체험학습을 가요.",
+    "필요한 준비물을 챙겨 주세요."
+  ],
+  "datetime": {"date": "2026-11-25", "time": null, "label": "체험학습 날", "note": null, "check": false},
+  "place": null,
+  "items": [{"name": "물", "detail": null}, {"name": "도시락", "detail": null}],
+  "cautions": null,
+  "contact": null
+}

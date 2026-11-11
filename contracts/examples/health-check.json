@@ -1,0 +1,24 @@
+{
+  "id": 12,
+  "status": "completed",
+  "title": "건강검진 안내문",
+  "sender": "건강검진센터",
+  "category": "병원·건강",
+  "created_at": "2026-11-10",
+  "summary": [
+    "건강검진을 받으라는 안내예요.",
+    "예약한 날짜와 시간을 확인하세요.",
+    "신분증을 챙겨 가세요."
+  ],
+  "datetime": {
+    "date": "2026-11-20",
+    "time": "09:00",
+    "label": "검진 받는 날",
+    "note": "8시 40분까지 오세요.",
+    "check": false
+  },
+  "place": {"name": "검진센터 2층", "address": null, "note": null},
+  "items": [{"name": "신분증", "detail": "본인을 확인할 수 있는 신분증"}],
+  "cautions": ["검진 전 안내에 따라 식사를 조절하세요."],
+  "contact": null
+}
