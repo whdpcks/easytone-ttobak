@@ -255,7 +255,7 @@ def run():
             db.add(doc)
 
         db.commit()
-        print(f"✅ 샘플 문서 {len(SAMPLES)}개를 삽입했어요.")
+        print(f"[완료] 샘플 문서 {len(SAMPLES)}개를 삽입했어요.")
     finally:
         db.close()
 
