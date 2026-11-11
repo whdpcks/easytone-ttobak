@@ -4,6 +4,7 @@ import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
 import { CAT_CONFIG, CATEGORIES } from '../utils/catConfig';
 import { getDocument, getDocuments } from '../api/documents';
+import { parseDate, daysUntil, formatTime } from '../utils/datetime';
 
 /* ───────────────────────────────────────────
    상세 화면 (SCR-09) — 7종 타입
@@ -328,24 +329,6 @@ function CategoryScreen({ doc, navigate }) {
 /* ───────────────────────────────────────────
    음성 텍스트 생성
 ─────────────────────────────────────────── */
-/* C 규격: date "YYYY-MM-DD", time "HH:MM" (24시간) */
-function parseDate(s) {
-  const [y, m, d] = s.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function daysUntil(date) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.round((date - today) / 86400000);
-}
-
-function formatTime(t) {
-  if (!t) return null;
-  const [h, m] = t.split(':').map(Number);
-  return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}시${m ? ` ${m}분` : ''}`;
-}
-
 function voiceText(doc, type, checked) {
   if (!doc) return '';
   switch (type) {

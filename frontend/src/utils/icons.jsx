@@ -12,6 +12,7 @@ const paths = {
   phone:   <path d="M5 3h4l2 5-3 2a12 12 0 006 6l2-3 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/>,
   tag:     <><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/></>,
   doc:     <><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></>,
+  lines:   <path d="M5 6h14M5 11h14M5 16h9"/>,
   check:   <path d="M5 12l5 5 9-10"/>,
   chev:    <path d="M9 5l7 7-7 7"/>,
   heart:   <path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 9c0 6-8 11-8 11z"/>,

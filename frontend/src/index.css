@@ -246,6 +246,24 @@ mark {
   border-radius: 999px; background: var(--c-soft); color: var(--c);
 }
 
+/* 결과 화면 타일 */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  font: inherit; text-align: left; background: #fff; color: var(--ink);
+  border: 2px solid var(--rule); border-radius: 20px; padding: 14px; min-height: 120px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 8px; cursor: pointer;
+}
+.tile .ti {
+  width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+  background: var(--t-soft); color: var(--t);
+}
+.tile .ti svg { width: 26px; height: 26px; }
+.tile b { font-size: 1.1em; line-height: 1.25; }
+.tile small { color: var(--ink2); font-size: .82em; line-height: 1.35; }
+.tile.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; min-height: 96px; }
+.tile.wide > div { flex: 1; min-width: 0; }
+.tile:active { transform: scale(.98); }
+
 /* 토스트 */
 .toast {
   position: fixed; left: 16px; right: 16px; bottom: 24px; z-index: 100;

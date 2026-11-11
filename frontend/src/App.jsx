@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Archive from './pages/Archive';
 import Detail  from './pages/Detail';
+import Result  from './pages/Result';
 
 /*
   라우팅 — A/B/C 담당 화면은 나중에 추가
-  D 담당: /archive, /detail/:docId/:type
+  D 담당: /archive, /result/:docId, /detail/:docId/:type
 */
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
       <Routes>
         {/* D 담당 화면 */}
         <Route path="/archive"               element={<Archive />} />
+        <Route path="/result/:docId"         element={<Result />}  />
         <Route path="/detail/:docId/:type"   element={<Detail />}  />
 
         {/* 임시 — 팀 통합 후 A/B/C 화면으로 교체 */}
