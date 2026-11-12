@@ -27,6 +27,7 @@ import Me from './pages/Me';
 import ComingSoon from './pages/ComingSoon';
 import Camera from './capture/Camera';
 import Loading from './capture/Loading';
+import AnalysisResult from './pages/AnalysisResult';
 
 const auth = (el) => <RequireAuth>{el}</RequireAuth>;
 
@@ -49,7 +50,7 @@ export default function App() {
               <Route path="/loading/:docId" element={auth(<Loading />)} />
 
               {/* C: 결과 */}
-              <Route path="/result/:docId" element={auth(<ComingSoon screen="result" owner="C" />)} />
+              <Route path="/result/:docId" element={auth(<AnalysisResult />)} />
 
               {/* D: 보관함 · 상세 */}
               <Route path="/archive" element={auth(<ComingSoon screen="archive" owner="D" />)} />
