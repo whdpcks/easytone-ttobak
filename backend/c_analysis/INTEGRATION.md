@@ -1,95 +1,50 @@
-# C 모듈 연결 가이드
+# A · B · C 통합 가이드
 
-현재 C 모듈은 **다른 팀원의 코드를 수정하지 않고** 독립적으로 구현했습니다.
+공통 진입점 `backend/main.py`가 다음을 연결합니다.
 
-## 환경
+- **A 인증**: Bearer 토큰과 `auth.require_document_owner`로 분석 결과의 소유권을 검사합니다.
+- **B 촬영**: `POST /documents` → `POST /documents/{id}/pages` → `POST /documents/{id}/finish`로 문서를 수집합니다.
+- **C 분석**: B의 `finish`가 `create_capture_analysis_handler(analysis_store)`를 백그라운드로 호출해 OCR과 AI를 실행합니다.
+- **B/C 상태**: `GET /documents/{id}/status`가 B의 진행 상태와 C의 분석 상태를 하나로 돌려줍니다.
+- **C 결과**: `GET /documents/{id}`는 분석 완료 JSON을 반환하고, 프론트 `/result/:docId`가 이를 표시합니다.
 
-- Python 3.11 이상, FastAPI (라우터에만 필요).
-- `UPSTAGE_API_KEY`: Upstage Console에서 발급한 키. `.env` 등 비공개 환경에만 저장합니다.
-- 외부 API: Document Parse (`document-parse`, `auto`) 및 Solar (`solar-pro4`).
-- C가 사용할 **팀 공통 SQLite DB 파일**의 경로를 A/B와 일치시켜 `SQLiteAnalysisStore(path)`에 전달해야 합니다.
-- 분석 결과는 `c_document_analyses` 테이블에만 기록합니다. B의 `documents`/`pages`는 수정하지 않습니다.
+사용자별 소유권 검사는 A/B의 공통 DB에 저장된 문서 소유자를 기준으로 합니다. B의 `documents`와 `pages`는 C가 직접 변경하지 않고, 분석 결과는 별도 `c_document_analyses` 테이블에 저장합니다. A/B/C는 모두 `TTOBAK_DB_PATH`가 가리키는 동일한 SQLite 파일을 사용해야 합니다.
 
-## A 담당자가 앱에 연결할 때 (참고 예시; 직접 수정하지 않음)
+## 실행 환경
 
-```python
-from c_analysis.storage import SQLiteAnalysisStore
-from c_analysis.router import create_analysis_router
+- Python 3.11 이상과 백엔드 의존성을 설치합니다.
+- `UPSTAGE_API_KEY`를 비공개 환경 변수로 설정합니다. Git에 올리지 마세요.
+- C는 Upstage Document Parse와 Solar API를 사용합니다. 실서비스 API 문서와 모델별 응답은 별도로 확인해야 합니다.
+- 테스트용 데이터는 실명·연락처 등 민감 정보를 넣지 않은 문서로 준비합니다.
+- API 키가 빠졌거나 분석에 실패하면 `status=failed`, `done=true`와 사용자용 오류 메시지를 반환합니다. 연결 실패를 무한 `processing`으로 숨기지 않습니다.
 
-store = SQLiteAnalysisStore("data/ttobak.db")
-# require_document_owner는 인증과 document_id별 소유권을 검사해야 합니다.
-app.include_router(create_analysis_router(store, authorize_document_dependency=require_document_owner))
-```
+## 재시도 주의
 
-사용자별 문서 접근 제한은 A의 인증 코드와 B의 문서 소유권 데이터가 확정되어야 합니다.
-`require_document_owner`는 인증뿐 아니라 문서 조회 시 소유권까지 검사하도록 연동해야 하며,
-**소유권 검사 전에는 공개 서버에 이 라우터를 연결하면 안 됩니다.**
+B가 `claim_analysis` 실행권을 획득한 경우에만 C의 콜백이 동작합니다. 사용자는 B의 `finish`를 다시 호출해 재시도할 수 있지만, B의 현재 정책상 실패 직후에는 새 작업을 즉시 획득하지 못할 수 있습니다(재실행 간격은 B 저장소 로직 참조). 자동 재시도/큐 복구 기능은 별도 구현입니다.
 
-## B 담당자가 finish에서 호출할 때 (참고 예시; 직접 수정하지 않음)
+## 화면 연결
 
-```python
-from c_analysis.analysis import SolarDocumentAnalyzer
-from c_analysis.ocr import UpstageDocumentParser
-from c_analysis.pipeline import analyze_document
+`frontend/src/App.jsx`의 `/result/:docId`가 `AnalysisResult.jsx`를 렌더링합니다. 이 화면은 A의 `api.get`으로 `GET /documents/{id}`를 요청하고 A의 `Header`와 음성 읽기 기능을 사용합니다.
 
-background_tasks.add_task(
-    analyze_document,
-    document_id,
-    image_paths=server_owned_page_paths,  # B가 조회한 서버 내부 사진 경로 목록
-    parser=UpstageDocumentParser(),
-    analyzer=SolarDocumentAnalyzer(),
-    store=store,
-)
-```
+결과의 상세 타일은 `/detail/:docId/:type`으로 이동합니다. **D 상세 화면은 아직 공통 앱에 연결되지 않아 임시 안내 화면으로 표시**됩니다. D와 최종 결과 JSON을 맞추는 작업은 추후 필요합니다.
 
-중복으로 `finish`가 들어와도 한 번만 처리합니다. 실패한 문서를 재분석하려면
-`store.start`를 따로 호출하지 말고 **OCR부터 다시 실행**하도록 다음과 같이 등록합니다.
-
-```python
-background_tasks.add_task(
-    analyze_document,
-    document_id,
-    image_paths=server_owned_page_paths,
-    parser=UpstageDocumentParser(),
-    analyzer=SolarDocumentAnalyzer(),
-    store=store,
-    retry_failed=True,
-)
-```
-
-재시도 요청은 A/B의 사용자 인증·문서 소유권 검사 및 저장된 사진 경로 확인 후
-실행해야 합니다. 이미 `processing` 또는 `completed`인 문서는 재시작하지 않습니다.
-
-## B가 요청할 진행 상태
-
-`GET /documents/12/status`
-
-```json
-{"id":12,"status":"processing","step":"ai","done":false,"error":null}
-```
-
-분석 완료면 `status=completed, done=true, step=null`, 실패면
-`status=failed, done=true, step=null, error=<사용자 안내문>`입니다.
-
-## D가 읽는 결과
-
-`GET /documents/12` → `contracts/document-result.schema.json` 형식의 JSON입니다.
-처리 중 조회 시 409, 분석 기록이 없다면 404를 반환합니다.
-`created_at`은 C의 분석일입니다. B의 보관일과 혼동하지 않도록 결과 화면에도 '분석일'로 표기합니다.
-
-## 테스트
+## 검증
 
 ```bash
-PYTHONPATH=backend python -m unittest discover -s backend/tests -v
+PYTHONPATH=backend python -m unittest discover -s backend/tests -q
+PYTHONPATH=backend python -m unittest discover -s backend/b_capture/tests -q
+node --test frontend/c_results/resultTiles.test.mjs
+cd frontend && npm ci && npm run build
 ```
 
-단위 테스트는 실제 계정/API 호출 없이 동작합니다. 실서버 전에는 실제
-Upstage 키와 테스트용 **비실명·비민감** 문서 3장으로 OCR 및 LLM 품질을 점검해야 합니다.
+Python 통합 테스트는 가짜 OCR·AI 결과를 주입하므로 실제 계정과 API 사용료 없이 인증 → 촬영 → 분석 → 결과 조회를 검증할 수 있습니다. 실서버에는 실제 Upstage 키로 별도 검증이 필요합니다.
+통합 테스트에는 개인정보가 없는 `backend/tests/fixtures/sample_application_notice.png` 가상 안내문을 업로드하며,
+해당 문서는 `generate_sample_notice.py`로 재생성할 수 있습니다. 신청 시작일(11월 20일)과
+마감일(11월 30일)을 다르게 표기해 날짜 오류도 점검합니다.
 
-## 중요한 보안 경계
+## 보안/기능 경계
 
-- 인증·권한 검사와 문서 소유권 검사는 A/B의 책임이지만, **API 공개 전 반드시 연결해야 합니다.**
-- C는 사용자 사진의 파일 업로드, 자동촬영, 파일 삭제를 처리하지 않습니다.
-- 이름·주소·연락처 등 민감한 정보가 실제 문서에 들어갈 수 있습니다. 현 단계에서
-  사용자가 제외한 개인정보 마스킹 기능은 구현하지 않았습니다.
-- OCR 원문은 C의 DB에 별도로 저장하지 않으며, API 오류에 원문과 키를 넣지 않습니다.
+- C는 촬영, 자동 촬영, 업로드, 삭제를 수행하지 않습니다.
+- 사용자가 이번 범위에서 제외한 개인정보 마스킹 기능은 없습니다.
+- OCR 원문은 C의 DB에 별도로 저장하지 않으며 API 오류에 원문이나 키를 포함하지 않습니다.
+- 문서에서 여러 날짜가 추출될 때 신청 시작일과 마감일을 혼동하지 않는지 추가 품질 검증이 필요합니다.

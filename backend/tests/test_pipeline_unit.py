@@ -9,20 +9,21 @@ class MemoryStore:
     def __init__(self):
         self.state = {}
 
-    def start(self, document_id, *, retry_failed=False):
+    def start(self, document_id, *, retry_failed=False, retry_processing_after_seconds=None,
+              capture_dispatch_claimed=False):
         state = self.state.get(document_id)
         if state is None or (state["status"] == "failed" and retry_failed):
             self.state[document_id] = {"status": "processing", "step": "ocr"}
-            return True
-        return False
+            return 1
+        return None
 
-    def update_step(self, document_id, step):
+    def update_step(self, document_id, step, *, attempt=None):
         self.state[document_id]["step"] = step
 
-    def complete(self, document_id, result):
+    def complete(self, document_id, result, *, attempt=None):
         self.state[document_id] = {"status": "completed", "result": result}
 
-    def fail(self, document_id, message):
+    def fail(self, document_id, message, *, attempt=None):
         self.state[document_id] = {"status": "failed", "error": message}
 
 

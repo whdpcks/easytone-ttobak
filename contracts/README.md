@@ -5,17 +5,20 @@
 
 ## B → C
 
-- B는 문서를 만들고 사진을 저장한 뒤 `finish` 처리에서 C의 `analyze(document_id)`를 실행합니다.
+- B는 문서를 만들고 사진을 저장한 뒤 `finish` 처리에서 C의 `analyze(document_id, image_paths)`를 실행합니다.
 - C는 B가 전달하는 문서 ID와 사진 경로를 사용합니다. **촬영/자동촬영/업로드는 C가 구현하지 않습니다.**
 
-## C → B
+## B → 화면 / C
 
-- `GET /documents/{id}/status` → `document-status.schema.json`
-- `status`: `processing`, `completed`, `failed`
+- `GET /documents/{id}/status`는 **B가 제공하는 단일 엔드포인트**입니다.
+- B는 C의 `analysis_store.status(document_id)`를 주입받아 분석 중 상태를 반환합니다.
+- `status`: `capturing`, `processing`, `completed`, `failed`
 - `step`: 진행 중이면 `ocr`, `ai`, `saving` 중 하나, 끝나면 `null`
 - `done`: `completed`와 `failed`에서 `true`; B는 오류 화면도 표시할 수 있습니다.
 - `error`: 실패했을 때 사용자에게 보여줄 안전한 설명. API 키나 OCR 원문은 노출하지 않습니다.
-- B의 `capturing` 상태는 **B의 문서 생성·촬영 영역**이며 C가 분석을 시작하기 전에는 이 API의 조회 대상이 아닙니다.
+- `capturing`은 촬영 진행 중(B), `processing`은 촬영 종료 후 분석 대기 또는 분석 중입니다.
+- `POST /documents/{id}/finish`는 B의 응답 규약에 따라 `202`와 `status=queued`를 반환합니다.
+- 분석 재시도는 B의 `finish` 재호출이 담당하며, B가 재실행을 허가한 콜백에서는 C에 `capture_dispatch_claimed=True`를 전달합니다.
 
 ## C → D/A
 

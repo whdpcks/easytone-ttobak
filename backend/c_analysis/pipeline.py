@@ -29,27 +29,41 @@ def analyze_document(
     parser: PageParser,
     analyzer: FieldsAnalyzer,
     store: SQLiteAnalysisStore,
-    retry_failed: bool = False,
+    retry_failed: bool = True,
+    retry_processing_after_seconds: int | None = 600,
+    capture_dispatch_claimed: bool = False,
 ) -> bool:
     """중복 실행이면 False; 새 분석 또는 실패한 건의 재분석을 시도했다면 True.
 
     API 키 등 설정 오류도 사용자에게 안전한 상태 메시지로 남깁니다.
     B가 BackgroundTasks.add_task 등에 이 함수를 등록하면 됩니다.
-    실패 재시도는 store.start만 먼저 호출하지 말고 이 함수를 retry_failed=True로 호출합니다.
+    B의 claim_analysis를 거친 콜백에서는 capture_dispatch_claimed=True를
+    전달합니다. B가 재시도 실행권을 확보했다면 C의 마지막 갱신 시점과 관계없이
+    새 세대의 분석을 시작합니다.
     """
-    if not store.start(document_id, retry_failed=retry_failed):
+    attempt = store.start(
+        document_id,
+        retry_failed=retry_failed,
+        retry_processing_after_seconds=retry_processing_after_seconds,
+        capture_dispatch_claimed=capture_dispatch_claimed,
+    )
+    if not attempt:
         return False
 
     try:
-        store.update_step(document_id, "ocr")
+        store.update_step(document_id, "ocr", attempt=attempt)
         source = parser.parse_pages(image_paths)
-        store.update_step(document_id, "ai")
+        store.update_step(document_id, "ai", attempt=attempt)
         result = analyzer.analyze(source, document_id=document_id)
-        store.update_step(document_id, "saving")
-        store.complete(document_id, result)
+        store.update_step(document_id, "saving", attempt=attempt)
+        store.complete(document_id, result, attempt=attempt)
     except (DocumentReadError, AnalysisError) as exc:
-        store.fail(document_id, str(exc))
+        store.fail(document_id, str(exc), attempt=attempt)
     except Exception:
         # 원문·API 키·스택트레이스를 화면에 공개하지 않습니다.
-        store.fail(document_id, "문서를 분석하지 못했어요. 잠시 뒤 다시 시도해 주세요.")
+        store.fail(
+            document_id,
+            "문서를 분석하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
+            attempt=attempt,
+        )
     return True

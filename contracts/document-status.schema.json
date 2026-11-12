@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "또박 분석 진행 상태 v1",
+  "title": "또박 문서 촬영·분석 상태 v1 (B 제공)",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "status", "step", "done", "error"],
   "properties": {
     "id": { "type": "integer", "minimum": 1 },
-    "status": { "enum": ["processing", "completed", "failed"] },
+    "status": { "enum": ["capturing", "processing", "completed", "failed"] },
     "step": { "enum": ["ocr", "ai", "saving", null] },
     "done": { "type": "boolean" },
     "error": { "type": ["string", "null"] }

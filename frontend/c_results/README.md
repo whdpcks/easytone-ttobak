@@ -8,13 +8,12 @@ import DocumentResultPage from './c_results/DocumentResultPage.jsx';
 <DocumentResultPage
   documentId={documentId}
   loadDocument={async (id, { signal }) => {
-    // A의 토큰 첨부 API 호출 함수로 교체하세요. 이 예시는 인터페이스 설명용입니다.
-    const response = await api.get(`/documents/${id}`, { signal });
-    return response.data;
+    // A의 API client는 JSON을 그대로 반환합니다.
+    return api.get(`/documents/${id}`, { signal });
   }}
   onOpenDetail={(id, tileKey) => {
     // D가 결정한 상세 화면 route와 매핑하세요.
-    navigate(`/documents/${id}/details/${tileKey}`);
+    navigate(`/detail/${id}/${tileKey}`);
   }}
   announce={announceWithAUseVoice}
   header={<SharedHeader />}

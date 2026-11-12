@@ -24,7 +24,7 @@ class ContractTests(unittest.TestCase):
     def test_status_schema_matches_simplified_contract(self):
         schema = json.loads((CONTRACTS / "document-status.schema.json").read_text(encoding="utf-8"))
         self.assertEqual(set(schema["properties"]), set(schema["required"]))
-        self.assertEqual(schema["properties"]["status"]["enum"], ["processing", "completed", "failed"])
+        self.assertEqual(schema["properties"]["status"]["enum"], ["capturing", "processing", "completed", "failed"])
 
 
 if __name__ == "__main__":

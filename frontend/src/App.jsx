@@ -51,7 +51,7 @@ export default function App() {
               <Route path="/camera" element={auth(<Camera />)} />
               <Route path="/loading/:docId" element={auth(<Loading />)} />
 
-              {/* 결과 — 지금은 D의 Result (C의 DocumentResultPage와 어느 쪽을 쓸지 정해야 함) */}
+              {/* 결과 — 시안 디자인의 D Result 사용 (C의 pages/AnalysisResult는 연결하지 않음) */}
               <Route path="/result/:docId" element={auth(<Result />)} />
 
               {/* D: 보관함 · 상세 */}

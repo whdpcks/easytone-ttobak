@@ -1,5 +1,7 @@
 import tempfile
 import unittest
+import sqlite3
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from c_analysis.analysis import AnalysisError
@@ -61,8 +63,9 @@ class StorageTests(unittest.TestCase):
         analyzer = SometimesBrokenAnalyzer()
         self.assertTrue(analyze_document(7, image_paths=["a.png"], parser=FakeParser(), analyzer=analyzer, store=self.store))
         self.assertEqual(self.store.status(7)["status"], "failed")
-        self.assertFalse(analyze_document(7, image_paths=["a.png"], parser=FakeParser(), analyzer=analyzer, store=self.store))
-        self.assertTrue(analyze_document(7, image_paths=["a.png"], parser=FakeParser(), analyzer=analyzer, store=self.store, retry_failed=True))
+        self.assertFalse(analyze_document(7, image_paths=["a.png"], parser=FakeParser(), analyzer=analyzer, store=self.store, retry_failed=False))
+        # B는 finish 재호출 시 별도의 플래그를 넘기지 않으므로 기본값으로 재시도됩니다.
+        self.assertTrue(analyze_document(7, image_paths=["a.png"], parser=FakeParser(), analyzer=analyzer, store=self.store))
         self.assertEqual(analyzer.attempts, 2)
         self.assertEqual(self.store.status(7)["status"], "completed")
         self.assertEqual(self.store.result(7)["title"], "재시도 성공")
@@ -72,6 +75,60 @@ class StorageTests(unittest.TestCase):
         self.assertTrue(self.store.start(8))
         self.assertFalse(analyze_document(8, image_paths=["a.png"], parser=FakeParser(), analyzer=FakeAnalyzer(), store=self.store, retry_failed=True))
         self.assertEqual(self.store.status(8)["status"], "processing")
+
+    def test_stale_processing_restarts_from_ocr(self):
+        old_attempt = self.store.start(20)
+        with sqlite3.connect(self.store.db_path) as conn:
+            conn.execute(
+                "UPDATE c_document_analyses SET updated_at = ? WHERE document_id = 20",
+                ((datetime.now(timezone.utc) - timedelta(minutes=11)).isoformat(),),
+            )
+        self.assertTrue(analyze_document(
+            20, image_paths=["a.png"], parser=FakeParser(),
+            analyzer=FakeAnalyzer(), store=self.store,
+        ))
+        self.assertEqual(self.store.result(20)["title"], "건강검진 안내문")
+        with self.assertRaises(AnalysisNotReady):
+            self.store.update_step(20, "saving", attempt=old_attempt)
+
+    def test_stale_worker_cannot_overwrite_new_attempt(self):
+        old_attempt = self.store.start(21)
+        with sqlite3.connect(self.store.db_path) as conn:
+            conn.execute(
+                "UPDATE c_document_analyses SET updated_at = ? WHERE document_id = 21",
+                ((datetime.now(timezone.utc) - timedelta(minutes=11)).isoformat(),),
+            )
+        new_attempt = self.store.start(
+            21, retry_failed=True, retry_processing_after_seconds=600,
+        )
+        self.assertNotEqual(old_attempt, new_attempt)
+        with self.assertRaises(AnalysisNotReady):
+            self.store.complete(
+                21, {"id": 21, "status": "completed", "title": "오래된 결과"},
+                attempt=old_attempt,
+            )
+        self.store.fail(21, "오래된 실행의 오류", attempt=old_attempt)
+        self.assertEqual(self.store.status(21)["status"], "processing")
+        self.store.complete(
+            21, {"id": 21, "status": "completed", "title": "최신 결과"},
+            attempt=new_attempt,
+        )
+        self.assertEqual(self.store.result(21)["title"], "최신 결과")
+
+    def test_old_sqlite_schema_adds_attempt_without_losing_data(self):
+        db_path = Path(self.temp.name) / "old.sqlite"
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "CREATE TABLE c_document_analyses (document_id INTEGER PRIMARY KEY,"
+                " status TEXT, step TEXT, result_json TEXT, error TEXT, updated_at TEXT)"
+            )
+            conn.execute(
+                "INSERT INTO c_document_analyses VALUES (1, 'failed', NULL, NULL, 'error', ?)",
+                (datetime.now(timezone.utc).isoformat(),),
+            )
+        migrated = SQLiteAnalysisStore(db_path)
+        self.assertTrue(migrated.start(1, retry_failed=True))
+        self.assertEqual(migrated.status(1)["status"], "processing")
 
     def test_processing_status(self):
         self.assertTrue(self.store.start(42))
