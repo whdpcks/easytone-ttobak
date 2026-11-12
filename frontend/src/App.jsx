@@ -27,7 +27,9 @@ import Me from './pages/Me';
 import ComingSoon from './pages/ComingSoon';
 import Camera from './capture/Camera';
 import Loading from './capture/Loading';
-import AnalysisResult from './pages/AnalysisResult';
+import Archive from './pages/Archive';
+import Result from './pages/Result';
+import Detail from './pages/Detail';
 
 const auth = (el) => <RequireAuth>{el}</RequireAuth>;
 
@@ -49,12 +51,12 @@ export default function App() {
               <Route path="/camera" element={auth(<Camera />)} />
               <Route path="/loading/:docId" element={auth(<Loading />)} />
 
-              {/* C: 결과 */}
-              <Route path="/result/:docId" element={auth(<AnalysisResult />)} />
+              {/* 결과 — 시안 디자인의 D Result 사용 (C의 pages/AnalysisResult는 연결하지 않음) */}
+              <Route path="/result/:docId" element={auth(<Result />)} />
 
               {/* D: 보관함 · 상세 */}
-              <Route path="/archive" element={auth(<ComingSoon screen="archive" owner="D" />)} />
-              <Route path="/detail/:docId/:type" element={auth(<ComingSoon screen="detail" owner="D" />)} />
+              <Route path="/archive" element={auth(<Archive />)} />
+              <Route path="/detail/:docId/:type" element={auth(<Detail />)} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
