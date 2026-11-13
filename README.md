@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/screenshots/readme/logo.png" width="220" alt="또박 로고">
+
 # 또박 · TTObak
 
 ### 복잡한 안내문을, 쉬운 행동으로.
@@ -28,20 +30,44 @@ React · FastAPI · Upstage · SQLite
 
 ## 02. 서비스 화면
 
-홈에서 문서를 촬영하거나 보관함을 열 수 있습니다. 내 정보에서는 글씨 크기와 읽어 주는 속도를 바꿀 수 있습니다.
+### 문서를 올리고, 필요한 내용을 고르세요
 
 <table>
-  <tr>
-    <th align="center">시작하기</th>
-    <th align="center">문서 촬영으로 진입</th>
-    <th align="center">나에게 맞는 설정</th>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screenshots/a-common-base/01_splash.jpg" width="240" alt="또박 시작 화면"></td>
-    <td align="center"><img src="https://github.com/whdpcks/easytone-ttobak/raw/8afaec0c6371656cf5ada0852fef222bbdcc91cf/docs/screenshots/a-common-base/03_home.jpg" width="240" alt="한국어 홈 화면의 문서 촬영과 보관함 버튼"></td>
-    <td align="center"><img src="https://github.com/whdpcks/easytone-ttobak/raw/8afaec0c6371656cf5ada0852fef222bbdcc91cf/docs/screenshots/a-common-base/06_me.jpg" width="240" alt="한국어 내 정보 및 설정 화면"></td>
-  </tr>
+  <tr><th align="center">홈</th><th align="center">파일 업로드</th><th align="center">분석 결과</th></tr>
+  <tr><td align="center"><img src="docs/screenshots/readme/home.png" width="240" alt="또박 한국어 홈 화면"></td><td align="center"><img src="docs/screenshots/readme/upload.png" width="240" alt="또박 한국어 파일 업로드 화면"></td><td align="center"><img src="docs/screenshots/readme/result.png" width="240" alt="또박 한국어 분석 결과 화면"></td></tr>
 </table>
+
+### 쉬운 설명과 체크리스트로 확인하세요
+
+<table>
+  <tr><th align="center">쉬운 요약</th><th align="center">준비물 체크리스트</th><th align="center">내 정보·읽기 설정</th></tr>
+  <tr><td align="center"><img src="docs/screenshots/readme/summary.png" width="240" alt="또박 한국어 쉬운 요약 화면"></td><td align="center"><img src="docs/screenshots/readme/items.png" width="240" alt="또박 한국어 준비물 체크리스트 화면"></td><td align="center"><img src="docs/screenshots/readme/settings.png" width="240" alt="또박 한국어 내 정보·읽기 설정 화면"></td></tr>
+</table>
+
+화면은 현재 앱에 [저장소의 시연 문서](backend/seed.py)를 표시해 캡처했습니다. 문서 내용은 화면 소개를 위한 예시 데이터입니다.
+
+<details>
+<summary>보관함 화면 펼쳐 보기</summary>
+
+<p align="center"><img src="docs/screenshots/readme/archive.png" width="320" alt="또박 한국어 보관함의 카테고리 필터와 문서 목록"></p>
+
+</details>
+
+### 한 장의 고지서가 이렇게 정리됩니다
+
+아래는 위 화면의 전기요금 고지서 예시를 정보별로 펼친 결과입니다.
+
+```mermaid
+flowchart LR
+    D["전기요금 고지서"] --> R["또박 분석 결과"]
+    R --> S["무슨 내용인가요?<br/>10월 전기요금 38,420원 납부"]
+    R --> T["언제까지인가요?<br/>11월 25일까지"]
+    R --> I["무엇을 챙기나요?<br/>고지서 · 카드나 현금"]
+    R --> C["무엇을 주의하나요?<br/>납부가 늦으면 추가 요금"]
+    R --> P["어디에 물어보나요?<br/>한전 고객센터 123"]
+    style D fill:#FFF3A6,stroke:#161B2E,color:#161B2E
+    style R fill:#D62839,stroke:#D62839,color:#FFFFFF
+```
 
 ## 03. 주요 기능
 
