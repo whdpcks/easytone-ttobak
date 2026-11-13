@@ -18,7 +18,7 @@
 .camera-preview {
   position: relative;
   display: grid;
-  grid-template-rows: calc(52px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) auto;
+  grid-template-rows: calc(88px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) auto;
   flex: 1;
   width: 100%;
   min-height: 0;
@@ -53,7 +53,7 @@
   box-sizing: border-box;
   width: min(82%, calc(100cqh * 210 / 297));
   aspect-ratio: 210 / 297;
-  border: 3px solid #ff4545;
+  border: 3px solid #FF4B57;
   box-shadow: 0 0 0 9999px rgb(0 0 0 / 60%);
 }
 
@@ -92,19 +92,34 @@
   vector-effect: non-scaling-stroke;
 }
 
-.camera-title {
+.camera-heading {
   position: absolute;
   top: calc(8px + env(safe-area-inset-top, 0px));
   left: 12px;
   right: 12px;
   z-index: 2;
+  pointer-events: none;
+  text-align: center;
+}
+
+.camera-title {
   margin: 0;
-  font-size: 28px;
+  font-family: var(--display);
+  font-size: clamp(24px, 6.5vw, 32px);
   line-height: 1.2;
-  font-weight: 750;
-  color: #ff4545;
+  font-weight: 400;
+  text-align: center;
+  color: #FF4B57;
   letter-spacing: 0;
   pointer-events: none;
+}
+
+.camera-subtitle {
+  margin: 8px 0 0;
+  color: #fffdf7;
+  font-size: clamp(16px, 4.3vw, 20px);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .capture-confirmation {

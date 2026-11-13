@@ -208,7 +208,10 @@ export default function Camera() {
   return (
     <main className="capture-app">
       <div className="camera-preview">
-        <h1 className="camera-title">문서 촬영</h1>
+        <div className="camera-heading">
+          <h1 className="camera-title">문서를 촬영해주세요</h1>
+          <p className="camera-subtitle">빨간 네모 안에 종이를 맞춰주세요</p>
+        </div>
         <video
           ref={videoRef}
           autoPlay
