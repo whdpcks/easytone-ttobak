@@ -67,27 +67,7 @@ React · FastAPI · Upstage · SQLite
 
 ## 04. 아키텍처
 
-```mermaid
-flowchart TD
-    UI["React 웹앱 · 촬영 / 업로드 / 결과 / 보관함"]
-    API["FastAPI · Bearer 인증 / 문서 소유권 검사"]
-    FILES["로컬 파일 · 업로드 문서"]
-    JOB["BackgroundTasks · OCR → AI → 저장"]
-    OCR["Upstage Document Parse"]
-    LLM["Upstage Solar · 분석 / 번역 / 검색"]
-    DB[("SQLite · 사용자 / 문서 / 분석 결과 / 번역 캐시")]
-    TTS["edge-tts · 음성 합성 / 파일 캐시"]
-    UI -->|개발 환경 /api 프록시| API
-    API --> FILES
-    API --> JOB
-    JOB --> OCR
-    JOB --> LLM
-    JOB --> DB
-    API <--> DB
-    API -->|번역 / 검색| LLM
-    API --> TTS
-    TTS -->|MP3| UI
-```
+[![휴대폰 브라우저와 또박 서버, Upstage API 사이의 촬영·분석·결과 조회 흐름](docs/architecture.png)](docs/architecture.png)
 
 브라우저가 문서를 올리고 분석을 요청하면 서버는 `202 Accepted`를 반환합니다. FastAPI의 백그라운드 작업이 문서 인식, AI 분석, 결과 저장을 차례로 수행합니다. 브라우저는 상태 API로 완료 여부를 확인하고 저장된 결과를 불러옵니다.
 
