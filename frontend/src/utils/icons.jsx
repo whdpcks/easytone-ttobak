@@ -33,9 +33,10 @@ const paths = {
   gov:     <><path d="M3 12a9 9 0 0118 0z"/><path d="M12 12v6.5a2 2 0 01-4 0M12 3v.5"/></>,
   globe:   <><path d="M3 6l6-2.5L15 6l6-2.5V18L15 20.5 9 18l-6 2.5z"/><path d="M9 3.5V18M15 6v14.5"/></>,
 
-  // 홈 (세트: 폴더=보관함, 카메라)
+  // 홈 (세트: 폴더=보관함, 카메라, 올리기=파일 업로드)
   box:     <path d="M3 5.5h6.5l2 2.5H21v11.5H3z"/>,
   camera:  <><path d="M3 7.5h4L8.5 5h7L17 7.5h4V19H3z"/><circle cx="12" cy="13" r="3.5"/><path d="M18 10.5h.01"/></>,
+  upload:  <><path d="M12 15V3.5M7.5 8L12 3.5 16.5 8"/><path d="M8.5 10.5H5V21h14V10.5h-3.5"/></>,
 };
 
 export default function Icon({ name, size = 24, ...props }) {
