@@ -73,16 +73,7 @@ React · FastAPI · Upstage · SQLite
 
 ## 05. 기술 스택
 
-| 영역 | 기술 | 용도 |
-| --- | --- | --- |
-| 프론트엔드 | React 18, React Router 6, Vite 5 | 화면·라우팅·개발 서버 |
-| 문서 촬영 | 브라우저 카메라 API, OpenCV.js 4.13 | 카메라 입력·문서 감지 |
-| 백엔드 | Python 3.11+, FastAPI, Uvicorn | REST API·백그라운드 분석 |
-| 문서 인식 | Upstage Document Parse | 이미지·PDF의 텍스트 추출 |
-| AI | Upstage Solar (`solar-pro4`) | 구조화 분석·번역·의미 검색 |
-| 저장소 | SQLite, 로컬 파일 시스템 | 계정·문서·결과·캐시 저장 |
-| 파일 검증 | Pillow, pypdf | 이미지 정규화·PDF 검증 |
-| 음성 | edge-tts, 브라우저 음성 합성 | MP3 안내·대체 음성 |
+[![또박 기술 스택. 화면은 React·Vite, 서버는 FastAPI·SQLite, 문서 분석은 Upstage Document Parse·Solar Pro 4, 음성 합성은 edge-tts를 사용합니다.](docs/tech-stack.png)](docs/tech-stack.png)
 
 검색 API는 Upstage 키가 없을 때 OpenAI 키를 사용하는 경로도 갖고 있습니다. **OCR·문서 분석·번역에는 Upstage 키가 필요**하며, 검색의 키워드 대체 경로가 문서 분석을 대신하지는 않습니다.
 
