@@ -56,7 +56,7 @@ const ko = {
   'home.hello': '{name} 님,', 'home.h': '무엇을 할까요?',
   'home.voice': '{name}무엇을 할까요? 새 종이를 찍으려면 문서 촬영, 찍어둔 종이를 보려면 보관함을 눌러주세요.',
   'home.voiceName': '{name} 님, ',
-  'home.cam': '문서 촬영', 'home.camD': '새 종이를 찍어요', 'home.box': '보관함', 'home.boxD': '찍어둔 종이를 봐요',
+  'home.cam': '문서 촬영', 'home.camD': '새 종이를 찍어요', 'home.up': '파일 업로드', 'home.upD': '문서 사진과 PDF를 읽어드려요', 'home.box': '보관함', 'home.boxD': '찍어둔 종이를 봐요',
   'home.boxN': '찍어둔 종이 {n}개',
 
   'me.title': '내 정보', 'me.voice': '내 정보 화면이에요. 사용할 말, 글씨 크기, 목소리 빠르기, 함께 볼 가족을 바꿀 수 있어요.',
@@ -74,6 +74,8 @@ const ko = {
 
   'soon.voice': '{title} 화면은 준비 중이에요.', 'soon.sub': '{owner} 담당 화면이 합쳐지면 여기에 나와요.', 'soon.home': '홈으로',
   'soon.camera': '문서 촬영', 'soon.loading': '읽는 중', 'soon.result': '분석 결과', 'soon.archive': '보관함', 'soon.detail': '자세히 보기',
+  // 파일 업로드 화면 (B) — 시연용 한·영·일·중, 그 외 언어는 영어로
+  'up.title': "파일 업로드", 'up.h': "문서 파일을\n선택해 주세요", 'up.desc': "JPG·PNG 사진과 PDF를 선택할 수 있어요.\n파일당 최대 10MB, PDF는 최대 100페이지까지 가능해요.", 'up.pickAria': "문서 사진 선택", 'up.pick': "파일 선택하기", 'up.pickMore': "파일 더 선택하기", 'up.count': "{n}개 파일을 선택했어요. PDF는 모든 페이지를 읽어요.", 'up.pdfAria': "PDF 파일", 'up.previewAlt': "{n}번째 문서 미리보기", 'up.del': "삭제", 'up.delAria': "{name} 삭제", 'up.read': "AI로 문서 읽기", 'up.retry': "다시 업로드하기", 'up.errType': "JPG, PNG 또는 PDF 파일을 선택해 주세요.", 'up.errSize': "비어 있지 않은 10MB 이하의 파일을 선택해 주세요.", 'up.errFail': "파일을 올리지 못했어요. 다시 시도해 주세요.", 'up.changeHint': "파일을 바꾸려면 홈으로 돌아간 뒤 다시 선택해 주세요.", 'up.busyTitle': "파일 업로드 중", 'up.busyH': "선택한 문서를\n준비하고 있어요", 'up.s1': "문서 준비", 'up.s2': "파일 업로드", 'up.s3': "분석 요청",
 };
 
 const en = {
@@ -114,7 +116,7 @@ const en = {
   'home.hello': '{name},', 'home.h': 'What would you like to do?',
   'home.voice': '{name}what would you like to do? To scan a new paper, tap Scan a document. To see saved papers, tap My papers.',
   'home.voiceName': '{name}, ',
-  'home.cam': 'Scan a document', 'home.camD': 'Take a photo of a new paper', 'home.box': 'My papers', 'home.boxD': 'See saved papers',
+  'home.cam': 'Scan a document', 'home.camD': 'Take a photo of a new paper', 'home.up': 'Upload a file', 'home.upD': 'We read document photos and PDFs', 'home.box': 'My papers', 'home.boxD': 'See saved papers',
   'home.boxN': '{n} saved papers',
   'me.title': 'My info', 'me.voice': 'This is My info. You can change your language, text size, voice speed, and family.',
   'me.lang': 'Language', 'me.font': 'Text size', 'me.rate': 'Voice speed', 'me.family': 'Share with family',
@@ -129,6 +131,8 @@ const en = {
   'rel.사위': 'Son-in-law', 'rel.형제자매': 'Sibling', 'rel.보호자': 'Guardian', 'rel.기타': 'Other',
   'soon.voice': 'The {title} screen is coming soon.', 'soon.sub': 'This will appear when {owner}’s screen is merged.', 'soon.home': 'Go home',
   'soon.camera': 'Scan', 'soon.loading': 'Reading', 'soon.result': 'Result', 'soon.archive': 'My papers', 'soon.detail': 'Details',
+  // 파일 업로드 화면 (B) — 시연용 한·영·일·중, 그 외 언어는 영어로
+  'up.title': "Upload a file", 'up.h': "Choose your\ndocument files", 'up.desc': "You can choose JPG·PNG photos and PDFs.\nUp to 10MB per file, PDFs up to 100 pages.", 'up.pickAria': "Choose document photos", 'up.pick': "Choose files", 'up.pickMore': "Choose more files", 'up.count': "{n} files chosen. We read every page of a PDF.", 'up.pdfAria': "PDF file", 'up.previewAlt': "Preview of document {n}", 'up.del': "Delete", 'up.delAria': "Delete {name}", 'up.read': "Read with AI", 'up.retry': "Upload again", 'up.errType': "Please choose JPG, PNG or PDF files.", 'up.errSize': "Please choose files that are not empty and 10MB or smaller.", 'up.errFail': "Could not upload the files. Please try again.", 'up.changeHint': "To change files, go back home and choose again.", 'up.busyTitle': "Uploading files", 'up.busyH': "Getting your\ndocuments ready", 'up.s1': "Prepare document", 'up.s2': "Upload files", 'up.s3': "Request reading",
 };
 
 const zh = {
@@ -165,7 +169,7 @@ const zh = {
   'signup.rateHint': '点击可以试听。', 'signup.btn': '注册', 'signup.busy': '注册中…', 'signup.welcome': '{name}，欢迎您。',
   'home.hello': '{name}，', 'home.h': '您要做什么？',
   'home.voice': '{name}您要做什么？拍新文件请点文件拍摄，看已存文件请点文件夹。', 'home.voiceName': '{name}，',
-  'home.cam': '文件拍摄', 'home.camD': '拍一张新文件', 'home.box': '文件夹', 'home.boxD': '查看已存文件', 'home.boxN': '已存文件 {n} 份',
+  'home.cam': '文件拍摄', 'home.camD': '拍一张新文件', 'home.up': '上传文件', 'home.upD': '为您读取文件照片和PDF', 'home.box': '文件夹', 'home.boxD': '查看已存文件', 'home.boxN': '已存文件 {n} 份',
   'me.title': '我的信息', 'me.voice': '这是我的信息。可以更改语言、字体大小、朗读速度和家人。',
   'me.lang': '语言', 'me.font': '字体大小', 'me.rate': '朗读速度', 'me.family': '和家人一起看',
   'me.familyAdd': '添加', 'me.familyMore': '{who} 等 {n} 人', 'me.intro': '再看拍摄说明',
@@ -178,6 +182,8 @@ const zh = {
   'rel.형제자매': '兄弟姐妹', 'rel.보호자': '监护人', 'rel.기타': '其他',
   'soon.voice': '{title}页面正在准备中。', 'soon.sub': '{owner} 的页面合并后会显示在这里。', 'soon.home': '回首页',
   'soon.camera': '文件拍摄', 'soon.loading': '读取中', 'soon.result': '分析结果', 'soon.archive': '文件夹', 'soon.detail': '详细内容',
+  // 파일 업로드 화면 (B) — 시연용 한·영·일·중, 그 외 언어는 영어로
+  'up.title': "上传文件", 'up.h': "请选择\n文件", 'up.desc': "可以选择JPG·PNG照片和PDF。\n每个文件最大10MB，PDF最多100页。", 'up.pickAria': "选择文件照片", 'up.pick': "选择文件", 'up.pickMore': "再选择文件", 'up.count': "已选择{n}个文件。PDF的每一页都会读取。", 'up.pdfAria': "PDF文件", 'up.previewAlt': "第{n}个文件预览", 'up.del': "删除", 'up.delAria': "删除{name}", 'up.read': "用AI读取文件", 'up.retry': "重新上传", 'up.errType': "请选择JPG、PNG或PDF文件。", 'up.errSize': "请选择不为空且不超过10MB的文件。", 'up.errFail': "文件上传失败，请再试一次。", 'up.changeHint': "要更换文件，请回到首页重新选择。", 'up.busyTitle': "正在上传文件", 'up.busyH': "正在准备\n所选文件", 'up.s1': "准备文件", 'up.s2': "上传文件", 'up.s3': "请求分析",
 };
 
 const ja = {
@@ -215,7 +221,7 @@ const ja = {
   'signup.rateHint': '押すとその速さで聞けます。', 'signup.btn': '登録する', 'signup.busy': '登録中…', 'signup.welcome': '{name}さん、ようこそ。',
   'home.hello': '{name}さん、', 'home.h': '何をしますか？',
   'home.voice': '{name}何をしますか？新しい紙を撮るなら書類を撮る、撮った紙を見るなら保管箱を押してください。', 'home.voiceName': '{name}さん、',
-  'home.cam': '書類を撮る', 'home.camD': '新しい紙を撮ります', 'home.box': '保管箱', 'home.boxD': '撮った紙を見ます', 'home.boxN': '保存した紙 {n}枚',
+  'home.cam': '書類を撮る', 'home.camD': '新しい紙を撮ります', 'home.up': 'ファイルを送る', 'home.upD': '書類の写真やPDFを読みます', 'home.box': '保管箱', 'home.boxD': '撮った紙を見ます', 'home.boxN': '保存した紙 {n}枚',
   'me.title': 'マイ情報', 'me.voice': 'マイ情報の画面です。使う言葉、文字の大きさ、声の速さ、家族を変えられます。',
   'me.lang': '使う言葉', 'me.font': '文字の大きさ', 'me.rate': '声の速さ', 'me.family': '家族と一緒に見る',
   'me.familyAdd': '追加', 'me.familyMore': '{who} ほか{n}人', 'me.intro': '撮影ガイドをもう一度見る',
@@ -229,6 +235,8 @@ const ja = {
   'rel.형제자매': '兄弟姉妹', 'rel.보호자': '保護者', 'rel.기타': 'その他',
   'soon.voice': '{title}の画面は準備中です。', 'soon.sub': '{owner}担当の画面が入るとここに表示されます。', 'soon.home': 'ホームへ',
   'soon.camera': '書類を撮る', 'soon.loading': '読み取り中', 'soon.result': '結果', 'soon.archive': '保管箱', 'soon.detail': 'くわしく見る',
+  // 파일 업로드 화면 (B) — 시연용 한·영·일·중, 그 외 언어는 영어로
+  'up.title': "ファイルを送る", 'up.h': "書類のファイルを\n選んでください", 'up.desc': "JPG・PNGの写真とPDFを選べます。\n1ファイル最大10MB、PDFは最大100ページまでです。", 'up.pickAria': "書類の写真を選ぶ", 'up.pick': "ファイルを選ぶ", 'up.pickMore': "ファイルをさらに選ぶ", 'up.count': "{n}個のファイルを選びました。PDFは全ページを読みます。", 'up.pdfAria': "PDFファイル", 'up.previewAlt': "{n}番目の書類のプレビュー", 'up.del': "削除", 'up.delAria': "{name}を削除", 'up.read': "AIで書類を読む", 'up.retry': "もう一度送る", 'up.errType': "JPG、PNG、PDFのファイルを選んでください。", 'up.errSize': "空でない10MB以下のファイルを選んでください。", 'up.errFail': "ファイルを送れませんでした。もう一度お試しください。", 'up.changeHint': "ファイルを変えるには、ホームに戻ってから選び直してください。", 'up.busyTitle': "ファイルを送っています", 'up.busyH': "選んだ書類を\n準備しています", 'up.s1': "書類の準備", 'up.s2': "ファイル送信", 'up.s3': "読み取りの依頼",
 };
 
 const vi = {
@@ -266,7 +274,7 @@ const vi = {
   'signup.rateHint': 'Chạm để nghe thử.', 'signup.btn': 'Đăng ký', 'signup.busy': 'Đang đăng ký…', 'signup.welcome': 'Chào mừng, {name}.',
   'home.hello': '{name},', 'home.h': 'bạn muốn làm gì?',
   'home.voice': '{name}bạn muốn làm gì? Để chụp giấy tờ mới, chạm Chụp giấy tờ. Để xem giấy tờ đã lưu, chạm Hộp lưu trữ.', 'home.voiceName': '{name}, ',
-  'home.cam': 'Chụp giấy tờ', 'home.camD': 'Chụp một tờ giấy mới', 'home.box': 'Hộp lưu trữ', 'home.boxD': 'Xem giấy tờ đã lưu', 'home.boxN': '{n} giấy tờ đã lưu',
+  'home.cam': 'Chụp giấy tờ', 'home.camD': 'Chụp một tờ giấy mới', 'home.up': 'Tải tệp lên', 'home.upD': 'Đọc ảnh giấy tờ và PDF cho bạn', 'home.box': 'Hộp lưu trữ', 'home.boxD': 'Xem giấy tờ đã lưu', 'home.boxN': '{n} giấy tờ đã lưu',
   'me.title': 'Thông tin', 'me.voice': 'Đây là thông tin của bạn. Bạn có thể đổi ngôn ngữ, cỡ chữ, tốc độ đọc và người thân.',
   'me.lang': 'Ngôn ngữ', 'me.font': 'Cỡ chữ', 'me.rate': 'Tốc độ đọc', 'me.family': 'Xem cùng gia đình',
   'me.familyAdd': 'Thêm', 'me.familyMore': '{who} và {n} người', 'me.intro': 'Xem lại hướng dẫn chụp',
@@ -315,7 +323,7 @@ const th = {
   'signup.rateHint': 'แตะเพื่อลองฟัง', 'signup.btn': 'สมัครสมาชิก', 'signup.busy': 'กำลังสมัคร…', 'signup.welcome': 'ยินดีต้อนรับ {name}',
   'home.hello': '{name}', 'home.h': 'ต้องการทำอะไร?',
   'home.voice': '{name}ต้องการทำอะไร? ถ่ายเอกสารใหม่ แตะถ่ายเอกสาร ดูเอกสารที่เก็บไว้ แตะกล่องเอกสาร', 'home.voiceName': '{name} ',
-  'home.cam': 'ถ่ายเอกสาร', 'home.camD': 'ถ่ายรูปเอกสารใหม่', 'home.box': 'กล่องเอกสาร', 'home.boxD': 'ดูเอกสารที่เก็บไว้', 'home.boxN': 'เอกสารที่เก็บ {n} ฉบับ',
+  'home.cam': 'ถ่ายเอกสาร', 'home.camD': 'ถ่ายรูปเอกสารใหม่', 'home.up': 'อัปโหลดไฟล์', 'home.upD': 'อ่านรูปเอกสารและ PDF ให้', 'home.box': 'กล่องเอกสาร', 'home.boxD': 'ดูเอกสารที่เก็บไว้', 'home.boxN': 'เอกสารที่เก็บ {n} ฉบับ',
   'me.title': 'ข้อมูลของฉัน', 'me.voice': 'หน้าข้อมูลของฉัน เปลี่ยนภาษา ขนาดตัวอักษร ความเร็วเสียง และครอบครัวได้',
   'me.lang': 'ภาษา', 'me.font': 'ขนาดตัวอักษร', 'me.rate': 'ความเร็วเสียง', 'me.family': 'ดูร่วมกับครอบครัว',
   'me.familyAdd': 'เพิ่ม', 'me.familyMore': '{who} และอีก {n} คน', 'me.intro': 'ดูวิธีถ่ายอีกครั้ง',
@@ -364,7 +372,7 @@ const id = {
   'signup.rateHint': 'Ketuk untuk mendengar.', 'signup.btn': 'Daftar', 'signup.busy': 'Mendaftar…', 'signup.welcome': 'Selamat datang, {name}.',
   'home.hello': '{name},', 'home.h': 'Mau melakukan apa?',
   'home.voice': '{name}mau melakukan apa? Untuk memfoto kertas baru, ketuk Foto dokumen. Untuk melihat kertas tersimpan, ketuk Kotak arsip.', 'home.voiceName': '{name}, ',
-  'home.cam': 'Foto dokumen', 'home.camD': 'Foto kertas baru', 'home.box': 'Kotak arsip', 'home.boxD': 'Lihat kertas tersimpan', 'home.boxN': '{n} kertas tersimpan',
+  'home.cam': 'Foto dokumen', 'home.camD': 'Foto kertas baru', 'home.up': 'Unggah file', 'home.upD': 'Kami bacakan foto dokumen dan PDF', 'home.box': 'Kotak arsip', 'home.boxD': 'Lihat kertas tersimpan', 'home.boxN': '{n} kertas tersimpan',
   'me.title': 'Info saya', 'me.voice': 'Ini info Anda. Anda bisa mengubah bahasa, ukuran huruf, kecepatan suara, dan keluarga.',
   'me.lang': 'Bahasa', 'me.font': 'Ukuran huruf', 'me.rate': 'Kecepatan suara', 'me.family': 'Lihat bersama keluarga',
   'me.familyAdd': 'Tambah', 'me.familyMore': '{who} dan {n} lainnya', 'me.intro': 'Lihat panduan foto lagi',
@@ -413,7 +421,7 @@ const fil = {
   'signup.rateHint': 'Pindutin para marinig.', 'signup.btn': 'Mag-sign up', 'signup.busy': 'Nagsa-sign up…', 'signup.welcome': 'Maligayang pagdating, {name}.',
   'home.hello': '{name},', 'home.h': 'Ano ang gusto mong gawin?',
   'home.voice': '{name}ano ang gusto mong gawin? Para kunan ang bagong papel, pindutin ang Kunan ang dokumento. Para makita ang naka-save, pindutin ang Aking mga papel.', 'home.voiceName': '{name}, ',
-  'home.cam': 'Kunan ang dokumento', 'home.camD': 'Kunan ang bagong papel', 'home.box': 'Aking mga papel', 'home.boxD': 'Tingnan ang naka-save', 'home.boxN': '{n} naka-save na papel',
+  'home.cam': 'Kunan ang dokumento', 'home.camD': 'Kunan ang bagong papel', 'home.up': 'Mag-upload ng file', 'home.upD': 'Babasahin ang litrato ng dokumento at PDF', 'home.box': 'Aking mga papel', 'home.boxD': 'Tingnan ang naka-save', 'home.boxN': '{n} naka-save na papel',
   'me.title': 'Aking impormasyon', 'me.voice': 'Ito ang iyong impormasyon. Puwedeng baguhin ang wika, laki ng letra, bilis ng boses, at pamilya.',
   'me.lang': 'Wika', 'me.font': 'Laki ng letra', 'me.rate': 'Bilis ng boses', 'me.family': 'Ibahagi sa pamilya',
   'me.familyAdd': 'Idagdag', 'me.familyMore': '{who} at {n} pa', 'me.intro': 'Ipakita ulit ang gabay sa pagkuha',
@@ -462,7 +470,7 @@ const km = {
   'signup.rateHint': 'ចុចដើម្បីស្តាប់សាកល្បង។', 'signup.btn': 'ចុះឈ្មោះ', 'signup.busy': 'កំពុងចុះឈ្មោះ…', 'signup.welcome': 'សូមស្វាគមន៍ {name}។',
   'home.hello': '{name}', 'home.h': 'តើចង់ធ្វើអ្វី?',
   'home.voice': '{name}តើចង់ធ្វើអ្វី? ថតឯកសារថ្មី សូមចុច ថតឯកសារ។ មើលឯកសារដែលបានរក្សាទុក សូមចុច ប្រអប់ឯកសារ។', 'home.voiceName': '{name} ',
-  'home.cam': 'ថតឯកសារ', 'home.camD': 'ថតរូបឯកសារថ្មី', 'home.box': 'ប្រអប់ឯកសារ', 'home.boxD': 'មើលឯកសារដែលបានរក្សាទុក', 'home.boxN': 'ឯកសារ {n}',
+  'home.cam': 'ថតឯកសារ', 'home.camD': 'ថតរូបឯកសារថ្មី', 'home.up': 'ផ្ទុកឯកសារឡើង', 'home.upD': 'អានរូបថតឯកសារ និង PDF ជូន', 'home.box': 'ប្រអប់ឯកសារ', 'home.boxD': 'មើលឯកសារដែលបានរក្សាទុក', 'home.boxN': 'ឯកសារ {n}',
   'me.title': 'ព័ត៌មានរបស់ខ្ញុំ', 'me.voice': 'នេះជាព័ត៌មានរបស់អ្នក។ អាចប្តូរភាសា ទំហំអក្សរ ល្បឿនសំឡេង និងគ្រួសារ។',
   'me.lang': 'ភាសា', 'me.font': 'ទំហំអក្សរ', 'me.rate': 'ល្បឿនសំឡេង', 'me.family': 'មើលជាមួយគ្រួសារ',
   'me.familyAdd': 'បន្ថែម', 'me.familyMore': '{who} និង {n} នាក់ទៀត', 'me.intro': 'មើលការណែនាំថតម្តងទៀត',
@@ -511,7 +519,7 @@ const my = {
   'signup.rateHint': 'နားထောင်ကြည့်ရန် နှိပ်ပါ။', 'signup.btn': 'စာရင်းသွင်းရန်', 'signup.busy': 'စာရင်းသွင်းနေသည်…', 'signup.welcome': 'ကြိုဆိုပါတယ် {name}။',
   'home.hello': '{name}', 'home.h': 'ဘာလုပ်ချင်ပါသလဲ?',
   'home.voice': '{name}ဘာလုပ်ချင်ပါသလဲ? စာရွက်အသစ်ရိုက်ရန် စာရွက်ရိုက်ရန် ကိုနှိပ်ပါ။ သိမ်းထားတာကြည့်ရန် စာရွက်သေတ္တာ ကိုနှိပ်ပါ။', 'home.voiceName': '{name} ',
-  'home.cam': 'စာရွက်ရိုက်ရန်', 'home.camD': 'စာရွက်အသစ် ဓာတ်ပုံရိုက်', 'home.box': 'စာရွက်သေတ္တာ', 'home.boxD': 'သိမ်းထားတာ ကြည့်ရန်', 'home.boxN': 'သိမ်းထားသော စာရွက် {n}',
+  'home.cam': 'စာရွက်ရိုက်ရန်', 'home.camD': 'စာရွက်အသစ် ဓာတ်ပုံရိုက်', 'home.up': 'ဖိုင်တင်ရန်', 'home.upD': 'စာရွက်ဓာတ်ပုံနှင့် PDF ကို ဖတ်ပေးမည်', 'home.box': 'စာရွက်သေတ္တာ', 'home.boxD': 'သိမ်းထားတာ ကြည့်ရန်', 'home.boxN': 'သိမ်းထားသော စာရွက် {n}',
   'me.title': 'ကျွန်ုပ်၏အချက်အလက်', 'me.voice': 'ဒါက သင့်အချက်အလက်ပါ။ ဘာသာစကား၊ စာလုံးအရွယ်၊ အသံအမြန်နှုန်းနဲ့ မိသားစုကို ပြောင်းနိုင်ပါတယ်။',
   'me.lang': 'ဘာသာစကား', 'me.font': 'စာလုံးအရွယ်', 'me.rate': 'အသံအမြန်နှုန်း', 'me.family': 'မိသားစုနှင့်အတူကြည့်',
   'me.familyAdd': 'ထည့်ရန်', 'me.familyMore': '{who} နှင့် နောက်ထပ် {n} ယောက်', 'me.intro': 'ရိုက်နည်းလမ်းညွှန် ထပ်ကြည့်',
@@ -560,7 +568,7 @@ const hi = {
   'signup.rateHint': 'सुनने के लिए दबाएँ।', 'signup.btn': 'साइन अप', 'signup.busy': 'साइन अप हो रहा है…', 'signup.welcome': 'स्वागत है, {name}।',
   'home.hello': '{name},', 'home.h': 'क्या करना चाहेंगे?',
   'home.voice': '{name}क्या करना चाहेंगे? नया कागज़ खींचने के लिए दस्तावेज़ खींचें दबाएँ। रखे हुए कागज़ देखने के लिए मेरे कागज़ दबाएँ।', 'home.voiceName': '{name}, ',
-  'home.cam': 'दस्तावेज़ खींचें', 'home.camD': 'नए कागज़ की फ़ोटो लें', 'home.box': 'मेरे कागज़', 'home.boxD': 'रखे हुए कागज़ देखें', 'home.boxN': '{n} रखे हुए कागज़',
+  'home.cam': 'दस्तावेज़ खींचें', 'home.camD': 'नए कागज़ की फ़ोटो लें', 'home.up': 'फ़ाइल अपलोड करें', 'home.upD': 'दस्तावेज़ की फ़ोटो और PDF पढ़कर सुनाएँ', 'home.box': 'मेरे कागज़', 'home.boxD': 'रखे हुए कागज़ देखें', 'home.boxN': '{n} रखे हुए कागज़',
   'me.title': 'मेरी जानकारी', 'me.voice': 'यह आपकी जानकारी है। भाषा, अक्षर का आकार, आवाज़ की गति और परिवार बदल सकते हैं।',
   'me.lang': 'भाषा', 'me.font': 'अक्षर का आकार', 'me.rate': 'आवाज़ की गति', 'me.family': 'परिवार के साथ देखें',
   'me.familyAdd': 'जोड़ें', 'me.familyMore': '{who} और {n} अन्य', 'me.intro': 'फ़ोटो गाइड फिर देखें',
@@ -609,7 +617,7 @@ const ne = {
   'signup.rateHint': 'सुन्न थिच्नुहोस्।', 'signup.btn': 'साइन अप', 'signup.busy': 'साइन अप हुँदैछ…', 'signup.welcome': 'स्वागत छ, {name}।',
   'home.hello': '{name},', 'home.h': 'के गर्न चाहनुहुन्छ?',
   'home.voice': '{name}के गर्न चाहनुहुन्छ? नयाँ कागज खिच्न कागजात खिच्नुहोस् थिच्नुहोस्। राखेका कागज हेर्न मेरा कागज थिच्नुहोस्।', 'home.voiceName': '{name}, ',
-  'home.cam': 'कागजात खिच्नुहोस्', 'home.camD': 'नयाँ कागजको फोटो', 'home.box': 'मेरा कागज', 'home.boxD': 'राखेका कागज हेर्नुहोस्', 'home.boxN': 'राखेका कागज {n}',
+  'home.cam': 'कागजात खिच्नुहोस्', 'home.camD': 'नयाँ कागजको फोटो', 'home.up': 'फाइल अपलोड गर्नुहोस्', 'home.upD': 'कागजातको फोटो र PDF पढिदिन्छौं', 'home.box': 'मेरा कागज', 'home.boxD': 'राखेका कागज हेर्नुहोस्', 'home.boxN': 'राखेका कागज {n}',
   'me.title': 'मेरो जानकारी', 'me.voice': 'यो तपाईंको जानकारी हो। भाषा, अक्षरको आकार, आवाजको गति र परिवार बदल्न सकिन्छ।',
   'me.lang': 'भाषा', 'me.font': 'अक्षरको आकार', 'me.rate': 'आवाजको गति', 'me.family': 'परिवारसँग हेर्नुहोस्',
   'me.familyAdd': 'थप्नुहोस्', 'me.familyMore': '{who} र अरू {n} जना', 'me.intro': 'फोटो गाइड फेरि हेर्नुहोस्',
