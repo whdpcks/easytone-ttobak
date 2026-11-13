@@ -94,8 +94,10 @@ button { -webkit-user-select: none; user-select: none; }
 .ib .gg { font-family: var(--display); font-size: 1.5em; line-height: 1; letter-spacing: -.04em; }
 .ib .gg small { font-size: .65em; }
 .ib.speaking { border-color: var(--red); color: var(--red); }
+.ib.muted { background: var(--rule); color: var(--ink2); border-color: var(--ink2); border-style: dashed; }
 .app.dark .ib { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.25); }
 .app.dark .ib.speaking { border-color: #FF4D5E; color: #FF8A95; }
+.app.dark .ib.muted { background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); border-color: rgba(255,255,255,.4); border-style: dashed; }
 
 /* ── 본문 ── */
 .body {

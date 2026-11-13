@@ -35,8 +35,14 @@ const LEFT = {
 export default function Header({ left = 'back', onLeft, title = '', voiceText, right = null }) {
   const navigate = useNavigate();
   const { openFontSheet } = useUI();
-  const { toggle, speaking } = useVoiceContext();
+  const { toggle, speaking, muted } = useVoiceContext();
   const t = useT();
+  // 소리 버튼 3가지: 읽는 중 → [멈춤], 꺼져 있음 → [꺼짐], 그 외 → [소리]
+  const sound = speaking
+    ? { icon: 'speaker', label: t('hdr.stop'), aria: t('hdr.stopAria'), cls: 'speaking' }
+    : muted
+      ? { icon: 'speakerOff', label: t('hdr.off'), aria: t('hdr.unmuteAria'), cls: 'muted' }
+      : { icon: 'speaker', label: t('hdr.sound'), aria: t('hdr.replayAria'), cls: '' };
 
   const handleLeft = onLeft || (() => {
     if (left === 'home') navigate('/home');
@@ -57,11 +63,11 @@ export default function Header({ left = 'back', onLeft, title = '', voiceText, r
           <span className="gg" aria-hidden="true">가<small>가</small></span>
         </HeaderButton>
         <HeaderButton
-          icon="speaker"
-          label={speaking ? t('hdr.stop') : t('hdr.sound')}
-          className={speaking ? 'speaking' : ''}
+          icon={sound.icon}
+          label={sound.label}
+          className={sound.cls}
           onClick={() => toggle(voiceText)}
-          aria-label={speaking ? t('hdr.stopAria') : t('hdr.replayAria')}
+          aria-label={sound.aria}
           aria-pressed={speaking}
         />
         {right}

@@ -4,7 +4,7 @@ import { useVoiceContext } from './VoiceContext';
 import { useT } from './i18n';
 
 export default function CaptionBar({ hidden = false }) {
-  const { caption, speaking, unlocked, supported } = useVoiceContext();
+  const { caption, speaking, unlocked, supported, muted } = useVoiceContext();
   const t = useT();
   if (hidden || !caption) return null;
 
@@ -12,7 +12,7 @@ export default function CaptionBar({ hidden = false }) {
     <div className={`caption${speaking ? ' on' : ''}`} aria-live="polite">
       <span className="wave" aria-hidden="true"><i /><i /><i /></span>
       <p>{caption}</p>
-      {supported && !unlocked && <span className="tap">{t('caption.tap')}</span>}
+      {supported && !unlocked && !muted && <span className="tap">{t('caption.tap')}</span>}
     </div>
   );
 }
