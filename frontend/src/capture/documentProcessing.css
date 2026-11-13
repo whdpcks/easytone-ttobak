@@ -274,3 +274,40 @@
 @media (orientation: landscape) and (max-height: 500px) {
   .animation-preview { max-width: none; }
 }
+
+/* 기다리는 동안 꽃 한 송이 (FlowerNote) — 그림의 흰 바탕은 multiply로 종이색에 녹임 */
+/* 꽃이 들어가는 만큼 종이 그림을 조금 줄이고, 아래 자막 바에 가리지 않게 여백을 둠 */
+.processing-body:has(.processing-flower) { gap: 10px; padding-bottom: 110px; }
+.processing-body:has(.processing-flower) .load-paper { padding: 16px 18px; gap: 10px; width: 74%; margin-top: 4px; }
+.processing-body:has(.processing-flower) .processing-heading { margin-top: 6px; }
+.processing-flower {
+  margin: 4px 0 0;
+  padding: 10px 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 2px dashed var(--rule);
+  animation: processing-flower-in .6s ease-out both;
+}
+.processing-flower img {
+  width: 76px;
+  height: 76px;
+  flex: none;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  transform-origin: 50% 100%;
+  animation: processing-flower-sway 4s ease-in-out infinite alternate;
+}
+.processing-flower figcaption {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.processing-flower b { font-size: .95em; }
+.processing-flower small { color: #4A5066; font-size: .75em; font-weight: 500; }
+.processing-flower q { margin-top: 2px; font-size: .82em; line-height: 1.4; word-break: keep-all; }
+@keyframes processing-flower-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes processing-flower-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .processing-flower, .processing-flower img { animation: none; }
+}

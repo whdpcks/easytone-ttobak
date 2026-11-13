@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './documentProcessing.css'
+import FlowerNote from './FlowerNote'
 
 const analysisSteps = ['글자 읽기', '중요한 곳 표시하기', '쉬운 말로 바꾸기']
 
@@ -64,6 +65,7 @@ export default function DocumentProcessing({
               </li>
             ))}
           </ul>
+          <FlowerNote />
         </div>
       )}
       <p className="processing-status" role="status">{completed ? '보관 완료' : steps[step]}</p>
