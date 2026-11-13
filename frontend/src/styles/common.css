@@ -332,8 +332,9 @@ hr.rule { border: 0; border-top: 2px dashed var(--rule); margin: 4px 0; width: 1
 .big .ic svg { width: 48px; height: 48px; }
 .big b { font-size: 1.6em; line-height: 1.2; }
 .big span.d { opacity: .85; }
-.big.cam { background: var(--red); color: #fff; }
-.big.box { background: #fff; color: var(--ink); border: 3px solid var(--ink); }
+.big.cam { background: #FFEA6B; color: var(--ink); }  /* 밝은 노랑 + 검정 글자 */
+.big.cam .arrow { background: var(--ink); color: #FFEA6B; }
+.big.box { background: #fff; color: var(--ink); border: 1px solid var(--ink); }
 .big .arrow {
   position: absolute; right: 20px; bottom: 20px;
   width: 52px; height: 52px; border-radius: 50%;
