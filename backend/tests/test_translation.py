@@ -36,8 +36,10 @@ class TranslationUnitTests(unittest.TestCase):
         self.assertEqual(set(got), set(SOURCE))
         self.assertEqual(got["datetime"]["date"], SOURCE["datetime"]["date"])
         self.assertEqual(got["datetime"]["time"], SOURCE["datetime"]["time"])
-        self.assertEqual(got["contact"], SOURCE["contact"])
-        self.assertEqual(got["place"]["address"], SOURCE["place"]["address"])
+        self.assertEqual(got["contact"]["phone"], SOURCE["contact"]["phone"])
+        self.assertTrue(got["contact"]["name"].startswith("VI: "))
+        self.assertTrue(got["sender"].startswith("VI: "))
+        self.assertTrue(got["place"]["address"].startswith("VI: "))
         self.assertEqual(got["category"], SOURCE["category"])
         self.assertTrue(got["summary"][0].startswith("VI: "))
 

@@ -44,6 +44,14 @@ CREATE TABLE IF NOT EXISTS c_document_translations (
 );
 """
 
+# D: 번역하는 항목이 바뀌면 올려서 예전 번역을 다시 쓰지 않게 함 (2: 기관·장소·주소·연락처 이름 추가)
+TRANSLATION_VERSION = 2
+
+
+def _translation_key(source: dict[str, Any]) -> str:
+    return _source_hash({"translation_version": TRANSLATION_VERSION, "source": source})
+
+
 def _source_hash(source: dict[str, Any]) -> str:
     encoded = json.dumps(source, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
@@ -197,7 +205,7 @@ class SQLiteAnalysisStore:
                 "SELECT source_hash, result_json FROM c_document_translations "
                 "WHERE document_id = ? AND lang = ?", (document_id, lang)
             ).fetchone()
-        if not row or row["source_hash"] != _source_hash(original):
+        if not row or row["source_hash"] != _translation_key(original):
             return None
         return json.loads(row["result_json"])
 
@@ -224,7 +232,7 @@ class SQLiteAnalysisStore:
                 "ON CONFLICT(document_id, lang) DO UPDATE SET "
                 "source_hash = excluded.source_hash, result_json = excluded.result_json, "
                 "updated_at = excluded.updated_at",
-                (document_id, lang, fingerprint, serialized, _utc_now()),
+                (document_id, lang, _translation_key(original), serialized, _utc_now()),
             )
 
     def result(self, document_id: int) -> dict[str, Any]:
