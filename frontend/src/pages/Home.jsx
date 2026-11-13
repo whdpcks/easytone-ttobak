@@ -45,7 +45,7 @@ export default function Home() {
 
         <button className="big box" onClick={() => navigate('/upload')}>
           <span className="ic"><Icon name="upload" /></span>
-          <div><b>파일 업로드</b><br /><span className="d">저장된 문서 사진을 읽어드려요</span></div>
+          <div><b>파일 업로드</b><br /><span className="d">문서 사진과 PDF를 읽어드려요</span></div>
           <span className="arrow"><Icon name="chev" /></span>
         </button>
 

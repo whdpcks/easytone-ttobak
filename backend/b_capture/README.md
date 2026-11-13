@@ -67,3 +67,11 @@ PYTHONPATH=backend python -m unittest discover -s backend/b_capture/tests -v
 촬영 종료 후 `/loading/:docId`는 서버 상태를 조회합니다. C가 연결되지 않으면 대기 화면을 유지합니다.
 C의 분석 실행 연결은 아직 필요하며, 결과 화면은 C 담당입니다.
 기존 `b-capture-demo` 및 `dev_app`은 단독 시연용으로 유지합니다.
+
+## PDF 업로드
+
+기존 `POST /documents/{id}/pages`에서 JPG·PNG와 함께 PDF를 받습니다.
+실제 PDF 구조를 검사하며 암호화된 PDF, 빈 PDF, 손상된 PDF는 400, 10MB 또는 100페이지 초과는 413입니다.
+PDF는 원본 전체를 저장해 기존 C Document Parse에 전달합니다.
+PDF 응답의 `width`, `height`는 0이며 `file_page_count`는 PDF 페이지 수(사진은 1)입니다.
+기존 `page_number`, finish의 `page_count`는 업로드 항목 순서와 개수이며 PDF 내부 페이지 수의 합이 아닙니다.
