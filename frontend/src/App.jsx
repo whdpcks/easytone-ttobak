@@ -26,6 +26,7 @@ import Home from './pages/Home';
 import Me from './pages/Me';
 import ComingSoon from './pages/ComingSoon';
 import Camera from './capture/Camera';
+import FileUpload from './capture/FileUpload';
 import Loading from './capture/Loading';
 import Archive from './pages/Archive';
 import Result from './pages/Result';
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/me" element={auth(<Me />)} />
 
               {/* B: 촬영 → 로딩·도장 */}
+              <Route path="/upload" element={auth(<FileUpload />)} />
               <Route path="/camera" element={auth(<Camera />)} />
               <Route path="/loading/:docId" element={auth(<Loading />)} />
 

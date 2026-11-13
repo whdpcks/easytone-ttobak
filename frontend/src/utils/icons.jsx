@@ -24,6 +24,7 @@ const paths = {
   globe:   <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></>,
   box:     <><path d="M3 5h18v4H3zM5 9v10h14V9M10 13h4"/></>,
   x:       <path d="M6 6l12 12M18 6L6 18"/>,
+  upload:  <><path d="M12 16V3M7 8l5-5 5 5M4 14v6h16v-6"/></>,
   camera:  <><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></>,
 };
 

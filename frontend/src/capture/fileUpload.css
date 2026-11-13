@@ -1,0 +1,8 @@
+.file-upload .big:disabled { opacity: .55; cursor: default; }
+.file-upload .upload-files { list-style: none; padding: 0; display: grid; gap: 12px; }
+.upload-files li { display: flex; align-items: center; gap: 12px; border: 1px solid var(--rule); padding: 12px; border-radius: 12px; }
+.upload-files img { width: 64px; height: 84px; object-fit: contain; background: white; flex-shrink: 0; }
+.upload-files span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.upload-files button { min-height: 48px; padding: 8px; font: inherit; flex-shrink: 0; }
+.file-upload [role="alert"] { color: var(--red); }
+.upload-processing { position: fixed; inset: 0; z-index: 100; max-width: 480px; margin: auto; }
