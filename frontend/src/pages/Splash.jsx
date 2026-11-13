@@ -56,7 +56,7 @@ export default function Splash() {
         </ol>
 
         <div className="grow" />
-        <button className="btn red" onClick={() => go('/signup')}>{t('splash.start')}</button>
+        <button className="btn yellow" onClick={() => go('/signup')}>{t('splash.start')}</button>
         <button className="btn line" onClick={() => go('/login')}>{t('splash.login')}</button>
       </main>
     </div>
