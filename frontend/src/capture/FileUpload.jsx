@@ -5,11 +5,15 @@ import { api } from '../api/client';
 import DocumentProcessing from './DocumentProcessing';
 import './fileUpload.css';
 import Icon from '../utils/icons';
+import { useT } from '../common/i18n';
+import { useSettings } from '../common/SettingsContext';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export default function FileUpload() {
   const navigate = useNavigate();
+  const t = useT();
+  const { lang } = useSettings();
   const input = useRef(null);
   const filesRef = useRef([]);
   const draft = useRef({ key: crypto.randomUUID(), id: null, uploaded: new Set() });
@@ -34,11 +38,11 @@ export default function FileUpload() {
     event.target.value = '';
     if (!selected.length || locked) return;
     if (selected.some(file => !/\.(jpe?g|png|pdf)$/i.test(file.name))) {
-      setError('JPG, PNG 또는 PDF 파일을 선택해 주세요.');
+      setError(t('up.errType'));
       return;
     }
     if (selected.some(file => !file.size || file.size > MAX_BYTES)) {
-      setError('비어 있지 않은 10MB 이하의 파일을 선택해 주세요.');
+      setError(t('up.errSize'));
       return;
     }
     const added = selected.map(file => ({ file, id: crypto.randomUUID(), url: URL.createObjectURL(file) }));
@@ -78,7 +82,8 @@ export default function FileUpload() {
       await api.post(`/documents/${document.id}/finish`);
       if (mounted.current) navigate(`/loading/${document.id}`, { replace: true });
     } catch (e) {
-      if (mounted.current) setError(e.message || '파일을 올리지 못했어요. 다시 시도해 주세요.');
+      // 서버 오류 문장은 한국어라, 다른 말을 쓰면 번역된 안내로 바꿔 보여 줌
+      if (mounted.current) setError(e.status === 0 ? t('err.network') : (lang === 'ko' && e.message) || t('up.errFail'));
     } finally {
       busy.current = false;
       if (mounted.current) setSaving(false);
@@ -87,36 +92,36 @@ export default function FileUpload() {
 
   return (
     <div className="app file-upload">
-      <Header title="파일 업로드" />
+      <Header title={t('up.title')} />
       <main className="body">
-        <h1 className="h">문서 파일을<br />선택해 주세요</h1>
-        <p>JPG·PNG 사진과 PDF를 선택할 수 있어요.<br />파일당 최대 10MB, PDF는 최대 100페이지까지 가능해요.</p>
+        <h1 className="h pre">{t('up.h')}</h1>
+        <p className="pre">{t('up.desc')}</p>
         <input ref={input} type="file" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" multiple
-          hidden aria-label="문서 사진 선택" onChange={choose} disabled={locked} />
+          hidden aria-label={t('up.pickAria')} onChange={choose} disabled={locked} />
         <button className="big box" onClick={() => input.current?.click()} disabled={locked}>
-          <b>{files.length ? '파일 더 선택하기' : '파일 선택하기'}</b>
+          <b>{files.length ? t('up.pickMore') : t('up.pick')}</b>
         </button>
         {files.length > 0 && <>
-          <p role="status">{files.length}개 파일을 선택했어요. PDF는 모든 페이지를 읽어요.</p>
+          <p role="status">{t('up.count', { n: files.length })}</p>
           <ol className="upload-files">
             {files.map((item, index) => <li key={item.id}>
               {/\.pdf$/i.test(item.file.name)
-                ? <span className="upload-pdf" aria-label="PDF 파일"><Icon name="doc" size={32} /><b>PDF</b></span>
-                : <img src={item.url} alt={`${index + 1}번째 문서 미리보기`} />}
+                ? <span className="upload-pdf" aria-label={t('up.pdfAria')}><Icon name="doc" size={32} /><b>PDF</b></span>
+                : <img src={item.url} alt={t('up.previewAlt', { n: index + 1 })} />}
               <span>{index + 1}. {item.file.name}</span>
-              <button onClick={() => remove(item.id)} disabled={locked} aria-label={`${item.file.name} 삭제`}>삭제</button>
+              <button onClick={() => remove(item.id)} disabled={locked} aria-label={t('up.delAria', { name: item.file.name })}>{t('up.del')}</button>
             </li>)}
           </ol>
           <button className="big cam" onClick={upload} disabled={saving}>
-            <b>{error && locked ? '다시 업로드하기' : 'AI로 문서 읽기'}</b>
+            <b>{error && locked ? t('up.retry') : t('up.read')}</b>
           </button>
         </>}
         {error && <p role="alert">{error}</p>}
-        {locked && !saving && error && <p>파일을 바꾸려면 홈으로 돌아간 뒤 다시 선택해 주세요.</p>}
+        {locked && !saving && error && <p>{t('up.changeHint')}</p>}
       </main>
       {saving && <div className="upload-processing"><DocumentProcessing step={step}
-        title="파일 업로드 중" heading={'선택한 문서를\n준비하고 있어요'}
-        steps={['문서 준비', '파일 업로드', '분석 요청']} /></div>}
+        title={t('up.busyTitle')} heading={t('up.busyH')}
+        steps={[t('up.s1'), t('up.s2'), t('up.s3')]} /></div>}
     </div>
   );
 }
