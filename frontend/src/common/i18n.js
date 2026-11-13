@@ -14,7 +14,7 @@ import { useSettings } from './SettingsContext';
 
 const ko = {
   'hdr.back': '뒤로', 'hdr.close': '닫기', 'hdr.home': '홈', 'hdr.font': '글씨', 'hdr.sound': '소리', 'hdr.stop': '멈춤',
-  'hdr.me': '내정보', 'hdr.fontAria': '글씨 크기', 'hdr.replayAria': '다시 듣기', 'hdr.stopAria': '읽기 멈추기',
+  'hdr.me': '내정보', 'hdr.fontAria': '글씨 크기', 'hdr.replayAria': '다시 듣기', 'hdr.stopAria': '읽기 멈추기', 'hdr.off': '꺼짐', 'hdr.unmuteAria': '소리 켜기',
   'caption.tap': '눌러서 듣기',
   'common.done': '다 됐어요', 'common.close': '닫기', 'common.loading': '불러오는 중…',
   'font.title': '글씨 크기', 'font.voice': '글씨 크기를 골라주세요. 보통, 크게, 아주 크게가 있어요.',
@@ -78,7 +78,7 @@ const ko = {
 
 const en = {
   'hdr.back': 'Back', 'hdr.close': 'Close', 'hdr.home': 'Home', 'hdr.font': 'Text', 'hdr.sound': 'Sound', 'hdr.stop': 'Stop',
-  'hdr.me': 'Me', 'hdr.fontAria': 'Text size', 'hdr.replayAria': 'Listen again', 'hdr.stopAria': 'Stop reading',
+  'hdr.me': 'Me', 'hdr.fontAria': 'Text size', 'hdr.replayAria': 'Listen again', 'hdr.stopAria': 'Stop reading', 'hdr.off': 'Off', 'hdr.unmuteAria': 'Turn sound on',
   'caption.tap': 'Tap to listen',
   'common.done': 'Done', 'common.close': 'Close', 'common.loading': 'Loading…',
   'font.title': 'Text size', 'font.voice': 'Choose a text size. Normal, Large, or Extra large.',
@@ -133,7 +133,7 @@ const en = {
 
 const zh = {
   'hdr.back': '返回', 'hdr.close': '关闭', 'hdr.home': '首页', 'hdr.font': '字体', 'hdr.sound': '声音', 'hdr.stop': '停止',
-  'hdr.me': '我的', 'hdr.fontAria': '字体大小', 'hdr.replayAria': '再听一遍', 'hdr.stopAria': '停止朗读',
+  'hdr.me': '我的', 'hdr.fontAria': '字体大小', 'hdr.replayAria': '再听一遍', 'hdr.stopAria': '停止朗读', 'hdr.off': '静音', 'hdr.unmuteAria': '打开声音',
   'caption.tap': '点击收听',
   'common.done': '完成', 'common.close': '关闭', 'common.loading': '加载中…',
   'font.title': '字体大小', 'font.voice': '请选择字体大小。有标准、大、特大。',
@@ -182,7 +182,7 @@ const zh = {
 
 const ja = {
   'hdr.back': '戻る', 'hdr.close': '閉じる', 'hdr.home': 'ホーム', 'hdr.font': '文字', 'hdr.sound': '音声', 'hdr.stop': '停止',
-  'hdr.me': 'マイ', 'hdr.fontAria': '文字の大きさ', 'hdr.replayAria': 'もう一度聞く', 'hdr.stopAria': '読み上げを止める',
+  'hdr.me': 'マイ', 'hdr.fontAria': '文字の大きさ', 'hdr.replayAria': 'もう一度聞く', 'hdr.stopAria': '読み上げを止める', 'hdr.off': 'オフ', 'hdr.unmuteAria': '音を出す',
   'caption.tap': 'タップして聞く',
   'common.done': '完了', 'common.close': '閉じる', 'common.loading': '読み込み中…',
   'font.title': '文字の大きさ', 'font.voice': '文字の大きさを選んでください。ふつう、大きく、とても大きくがあります。',
@@ -233,7 +233,7 @@ const ja = {
 
 const vi = {
   'hdr.back': 'Quay lại', 'hdr.close': 'Đóng', 'hdr.home': 'Trang chủ', 'hdr.font': 'Chữ', 'hdr.sound': 'Nghe', 'hdr.stop': 'Dừng',
-  'hdr.me': 'Tôi', 'hdr.fontAria': 'Cỡ chữ', 'hdr.replayAria': 'Nghe lại', 'hdr.stopAria': 'Dừng đọc',
+  'hdr.me': 'Tôi', 'hdr.fontAria': 'Cỡ chữ', 'hdr.replayAria': 'Nghe lại', 'hdr.stopAria': 'Dừng đọc', 'hdr.off': 'Tắt', 'hdr.unmuteAria': 'Bật âm thanh',
   'caption.tap': 'Chạm để nghe',
   'common.done': 'Xong', 'common.close': 'Đóng', 'common.loading': 'Đang tải…',
   'font.title': 'Cỡ chữ', 'font.voice': 'Hãy chọn cỡ chữ. Có Vừa, Lớn và Rất lớn.',
@@ -283,7 +283,7 @@ const vi = {
 
 const th = {
   'hdr.back': 'กลับ', 'hdr.close': 'ปิด', 'hdr.home': 'หน้าแรก', 'hdr.font': 'ตัวอักษร', 'hdr.sound': 'เสียง', 'hdr.stop': 'หยุด',
-  'hdr.me': 'ฉัน', 'hdr.fontAria': 'ขนาดตัวอักษร', 'hdr.replayAria': 'ฟังอีกครั้ง', 'hdr.stopAria': 'หยุดอ่าน',
+  'hdr.me': 'ฉัน', 'hdr.fontAria': 'ขนาดตัวอักษร', 'hdr.replayAria': 'ฟังอีกครั้ง', 'hdr.stopAria': 'หยุดอ่าน', 'hdr.off': 'ปิดเสียง', 'hdr.unmuteAria': 'เปิดเสียง',
   'caption.tap': 'แตะเพื่อฟัง',
   'common.done': 'เสร็จแล้ว', 'common.close': 'ปิด', 'common.loading': 'กำลังโหลด…',
   'font.title': 'ขนาดตัวอักษร', 'font.voice': 'เลือกขนาดตัวอักษร มี ปกติ ใหญ่ และใหญ่มาก',
@@ -332,7 +332,7 @@ const th = {
 
 const id = {
   'hdr.back': 'Kembali', 'hdr.close': 'Tutup', 'hdr.home': 'Beranda', 'hdr.font': 'Huruf', 'hdr.sound': 'Suara', 'hdr.stop': 'Berhenti',
-  'hdr.me': 'Saya', 'hdr.fontAria': 'Ukuran huruf', 'hdr.replayAria': 'Dengar lagi', 'hdr.stopAria': 'Berhenti membaca',
+  'hdr.me': 'Saya', 'hdr.fontAria': 'Ukuran huruf', 'hdr.replayAria': 'Dengar lagi', 'hdr.stopAria': 'Berhenti membaca', 'hdr.off': 'Mati', 'hdr.unmuteAria': 'Nyalakan suara',
   'caption.tap': 'Ketuk untuk dengar',
   'common.done': 'Selesai', 'common.close': 'Tutup', 'common.loading': 'Memuat…',
   'font.title': 'Ukuran huruf', 'font.voice': 'Pilih ukuran huruf. Ada Biasa, Besar, dan Sangat besar.',
@@ -381,7 +381,7 @@ const id = {
 
 const fil = {
   'hdr.back': 'Bumalik', 'hdr.close': 'Isara', 'hdr.home': 'Home', 'hdr.font': 'Letra', 'hdr.sound': 'Tunog', 'hdr.stop': 'Ihinto',
-  'hdr.me': 'Ako', 'hdr.fontAria': 'Laki ng letra', 'hdr.replayAria': 'Pakinggan ulit', 'hdr.stopAria': 'Ihinto ang pagbasa',
+  'hdr.me': 'Ako', 'hdr.fontAria': 'Laki ng letra', 'hdr.replayAria': 'Pakinggan ulit', 'hdr.stopAria': 'Ihinto ang pagbasa', 'hdr.off': 'Naka-off', 'hdr.unmuteAria': 'Buksan ang tunog',
   'caption.tap': 'Pindutin para makinig',
   'common.done': 'Tapos na', 'common.close': 'Isara', 'common.loading': 'Naglo-load…',
   'font.title': 'Laki ng letra', 'font.voice': 'Pumili ng laki ng letra. May Karaniwan, Malaki, at Napakalaki.',
@@ -430,7 +430,7 @@ const fil = {
 
 const km = {
   'hdr.back': 'ត្រឡប់', 'hdr.close': 'បិទ', 'hdr.home': 'ទំព័រដើម', 'hdr.font': 'អក្សរ', 'hdr.sound': 'សំឡេង', 'hdr.stop': 'ឈប់',
-  'hdr.me': 'ខ្ញុំ', 'hdr.fontAria': 'ទំហំអក្សរ', 'hdr.replayAria': 'ស្តាប់ម្តងទៀត', 'hdr.stopAria': 'ឈប់អាន',
+  'hdr.me': 'ខ្ញុំ', 'hdr.fontAria': 'ទំហំអក្សរ', 'hdr.replayAria': 'ស្តាប់ម្តងទៀត', 'hdr.stopAria': 'ឈប់អាន', 'hdr.off': 'បិទ', 'hdr.unmuteAria': 'បើកសំឡេង',
   'caption.tap': 'ចុចដើម្បីស្តាប់',
   'common.done': 'រួចរាល់', 'common.close': 'បិទ', 'common.loading': 'កំពុងផ្ទុក…',
   'font.title': 'ទំហំអក្សរ', 'font.voice': 'សូមជ្រើសរើសទំហំអក្សរ។ មាន ធម្មតា ធំ និងធំណាស់។',
@@ -479,7 +479,7 @@ const km = {
 
 const my = {
   'hdr.back': 'နောက်သို့', 'hdr.close': 'ပိတ်', 'hdr.home': 'ပင်မ', 'hdr.font': 'စာလုံး', 'hdr.sound': 'အသံ', 'hdr.stop': 'ရပ်',
-  'hdr.me': 'ကျွန်ုပ်', 'hdr.fontAria': 'စာလုံးအရွယ်', 'hdr.replayAria': 'ထပ်နားထောင်', 'hdr.stopAria': 'ဖတ်တာရပ်',
+  'hdr.me': 'ကျွန်ုပ်', 'hdr.fontAria': 'စာလုံးအရွယ်', 'hdr.replayAria': 'ထပ်နားထောင်', 'hdr.stopAria': 'ဖတ်တာရပ်', 'hdr.off': 'ပိတ်ထား', 'hdr.unmuteAria': 'အသံဖွင့်',
   'caption.tap': 'နားထောင်ရန် နှိပ်ပါ',
   'common.done': 'ပြီးပြီ', 'common.close': 'ပိတ်', 'common.loading': 'ဖွင့်နေသည်…',
   'font.title': 'စာလုံးအရွယ်', 'font.voice': 'စာလုံးအရွယ်ကို ရွေးပါ။ ပုံမှန်၊ ကြီး၊ အလွန်ကြီး ရှိပါတယ်။',
@@ -528,7 +528,7 @@ const my = {
 
 const hi = {
   'hdr.back': 'वापस', 'hdr.close': 'बंद', 'hdr.home': 'होम', 'hdr.font': 'अक्षर', 'hdr.sound': 'आवाज़', 'hdr.stop': 'रोकें',
-  'hdr.me': 'मैं', 'hdr.fontAria': 'अक्षर का आकार', 'hdr.replayAria': 'फिर से सुनें', 'hdr.stopAria': 'पढ़ना रोकें',
+  'hdr.me': 'मैं', 'hdr.fontAria': 'अक्षर का आकार', 'hdr.replayAria': 'फिर से सुनें', 'hdr.stopAria': 'पढ़ना रोकें', 'hdr.off': 'बंद', 'hdr.unmuteAria': 'आवाज़ चालू करें',
   'caption.tap': 'सुनने के लिए छुएँ',
   'common.done': 'हो गया', 'common.close': 'बंद करें', 'common.loading': 'लोड हो रहा है…',
   'font.title': 'अक्षर का आकार', 'font.voice': 'अक्षर का आकार चुनें। सामान्य, बड़ा और बहुत बड़ा है।',
@@ -577,7 +577,7 @@ const hi = {
 
 const ne = {
   'hdr.back': 'पछाडि', 'hdr.close': 'बन्द', 'hdr.home': 'गृह', 'hdr.font': 'अक्षर', 'hdr.sound': 'आवाज', 'hdr.stop': 'रोक्नुहोस्',
-  'hdr.me': 'म', 'hdr.fontAria': 'अक्षरको आकार', 'hdr.replayAria': 'फेरि सुन्नुहोस्', 'hdr.stopAria': 'पढ्न रोक्नुहोस्',
+  'hdr.me': 'म', 'hdr.fontAria': 'अक्षरको आकार', 'hdr.replayAria': 'फेरि सुन्नुहोस्', 'hdr.stopAria': 'पढ्न रोक्नुहोस्', 'hdr.off': 'बन्द', 'hdr.unmuteAria': 'आवाज खोल्नुहोस्',
   'caption.tap': 'सुन्न छुनुहोस्',
   'common.done': 'सकियो', 'common.close': 'बन्द गर्नुहोस्', 'common.loading': 'लोड हुँदैछ…',
   'font.title': 'अक्षरको आकार', 'font.voice': 'अक्षरको आकार छान्नुहोस्। सामान्य, ठूलो र धेरै ठूलो छ।',

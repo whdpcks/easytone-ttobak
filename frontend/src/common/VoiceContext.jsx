@@ -7,12 +7,15 @@
      다음 문장은 미리 받아 둬서 문장 사이가 끊기지 않게 합니다.
    - 브라우저는 첫 터치 전에는 소리를 막습니다. 터치 전에 들어온 문장은
      기다렸다가 첫 터치 때 읽습니다. 그동안 자막은 바로 보입니다.
+   - 소리 꺼짐(muted): 헤더의 [멈춤]을 누르면 꺼지고, [꺼짐]을 누르면 다시 켜집니다.
+     꺼져 있으면 어느 화면에서도 소리를 내지 않고 자막만 바꿉니다. 새로고침해도 유지됩니다.
 
    화면에서는 보통 hooks/useVoice 를 씁니다.
 ───────────────────────────────────────────── */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE } from '../api/client';
 import { useSettings } from './SettingsContext';
+import { STORAGE, readStorage, writeStorage } from './storageKeys';
 
 const VoiceContext = createContext(null);
 
@@ -55,6 +58,8 @@ export function VoiceProvider({ children }) {
   const [caption, setCaption] = useState('');
   const [speaking, setSpeaking] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [muted, setMutedState] = useState(() => readStorage(STORAGE.muted, '') === '1');
+  const mutedRef = useRef(muted);
 
   const genRef = useRef(0);          // stop/새 speak 때마다 증가 → 이전 재생의 콜백 무시
   const lastTextRef = useRef('');
@@ -159,21 +164,29 @@ export function VoiceProvider({ children }) {
     setCaption(lastTextRef.current);
   }, []);
 
-  /** 문장을 읽습니다. 터치 전이면 자막만 띄우고 첫 터치 때 읽습니다. */
+  const setMuted = useCallback((v) => {
+    mutedRef.current = v;
+    setMutedState(v);
+    writeStorage(STORAGE.muted, v ? '1' : null);
+  }, []);
+
+  /** 문장을 읽습니다. 터치 전이면 자막만 띄우고 첫 터치 때 읽습니다. 소리 꺼짐이면 자막만 바꿉니다. */
   const speak = useCallback((text) => {
     const t = cleanText(text);
     if (!t) return;
     lastTextRef.current = t;
     setCaption(t);
+    if (mutedRef.current) return;
     if (!unlockedRef.current) { pendingRef.current = t; return; }
     play(t);
   }, [play]);
 
-  /** 소리 버튼: 읽는 중이면 멈추고, 아니면 (text 또는 마지막 문장을) 다시 읽기 */
+  /** 소리 버튼: 읽는 중이면 멈추고 소리를 끔(모든 화면) / 꺼져 있으면 켜고 읽음 / 아니면 다시 읽기 */
   const toggle = useCallback((text) => {
-    if (speaking) { stop(); return; }
+    if (speaking) { stop(); setMuted(true); return; }
+    if (mutedRef.current) setMuted(false);
     speak(text || lastTextRef.current);
-  }, [speaking, speak, stop]);
+  }, [speaking, speak, stop, setMuted]);
 
   /** 사용자 터치 순간에 호출하면 소리가 풀립니다. (첫 터치에서 자동으로도 호출됨) */
   const unlock = useCallback(() => {
@@ -216,11 +229,11 @@ export function VoiceProvider({ children }) {
   }, [stop]);
 
   const value = useMemo(() => ({
-    speak, stop, toggle, unlock,
+    speak, stop, toggle, unlock, setMuted,
     replay: () => speak(lastTextRef.current),
-    speaking, caption, unlocked,
+    speaking, caption, unlocked, muted,
     supported: true,
-  }), [speak, stop, toggle, unlock, speaking, caption, unlocked]);
+  }), [speak, stop, toggle, unlock, setMuted, speaking, caption, unlocked, muted]);
 
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;
 }

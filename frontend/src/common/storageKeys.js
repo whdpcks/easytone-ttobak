@@ -4,6 +4,7 @@ export const STORAGE = {
   scale: 'ttobak-scale',            // 글씨 크기 1 | 1.25 | 1.5
   rate: 'ttobak-rate',              // 목소리 빠르기
   lang: 'ttobak-lang',              // 사용할 말 ko | en | zh | vi
+  muted: 'ttobak-muted',            // 소리 꺼짐 ('1'이면 모든 화면에서 자동으로 읽지 않음)
   cameraIntroSeen: 'ttobak-camera-intro-seen', // B: 촬영 안내 애니메이션을 봤는지 ('1')
 };
 

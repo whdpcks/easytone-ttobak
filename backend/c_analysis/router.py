@@ -1,22 +1,19 @@
-"""A의 FastAPI 앱에 명시적으로 연결할 C 전용 조회 라우터.
-
-실제 연결은 A가 app.include_router(...)를 수행할 때만 일어납니다.
-"""
-
+"""A의 FastAPI 앱에 연결하는 C 조회/번역 라우터."""
 from __future__ import annotations
 
+from typing import Callable, Literal
 from .storage import AnalysisNotFound, AnalysisNotReady, SQLiteAnalysisStore
+from .translation import SolarDocumentTranslator, TranslationError, translate_document
+
+Language = Literal["ko", "en", "zh", "ja", "vi", "th", "id", "fil", "km", "my", "hi", "ne"]
 
 
 def create_analysis_router(
-    store: SQLiteAnalysisStore,
-    *,
+    store: SQLiteAnalysisStore, *,
     authorize_document_dependency,
     include_status: bool = False,
+    translator_factory: Callable[[], SolarDocumentTranslator] = SolarDocumentTranslator,
 ):
-    # B가 촬영부터 분석 완료까지 /documents/{id}/status를 제공하므로
-    # 공통 앱에서는 C의 동일 경로를 기본적으로 등록하지 않습니다.
-    # C 단독 테스트에서는 include_status=True로 활성화할 수 있습니다.
     from fastapi import APIRouter, Depends, HTTPException
 
     if authorize_document_dependency is None:
@@ -39,5 +36,25 @@ def create_analysis_router(
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except AnalysisNotReady as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @router.get("/documents/{document_id}/translation")
+    def get_translated_document(document_id: int, lang: Language = "ko"):
+        """원본 GET은 그대로 두고, 사용자가 볼 때 선택 언어로 번역한다."""
+        try:
+            original = store.result(document_id)
+            if lang == "ko":
+                return original
+            cached = store.get_translation(document_id, lang, original)
+            if cached is not None:
+                return cached
+            translated = translate_document(original, lang=lang, translator=translator_factory())
+            store.save_translation(document_id, lang, original, translated)
+            return translated
+        except AnalysisNotFound as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except AnalysisNotReady as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except TranslationError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     return router
