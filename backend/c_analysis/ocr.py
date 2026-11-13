@@ -18,6 +18,7 @@ from urllib.request import Request, urlopen
 
 DOCUMENT_PARSE_ENDPOINT = "https://api.upstage.ai/v1/document-digitization"
 _ALLOWED_TYPES = {
+    ".pdf": "application/pdf",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".png": "image/png",
@@ -101,7 +102,7 @@ class UpstageDocumentParser:
     def parse_image(self, path: str | Path) -> str:
         image_path = Path(path)
         if image_path.suffix.lower() not in _ALLOWED_TYPES:
-            raise DocumentReadError("지원하지 않는 사진 형식이에요. JPG 또는 PNG로 촬영해 주세요.")
+            raise DocumentReadError("지원하지 않는 사진 형식이에요. JPG, PNG 또는 PDF를 올려주세요.")
         if not image_path.is_file():
             raise DocumentReadError("저장된 사진을 찾을 수 없어요.")
         image_size = image_path.stat().st_size
