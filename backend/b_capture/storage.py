@@ -91,7 +91,7 @@ class CaptureStore:
             return cursor.lastrowid
 
     def add_page(self, document_id: int, owner_id: str, page_id: str,
-                 source_sha256: str, image: bytes, width: int, height: int) -> dict:
+                 source_sha256: str, image: bytes, width: int, height: int, *, extension: str = ".jpg") -> dict:
         with self._db(write=True) as connection:
             document = self._document(connection, document_id, owner_id)
             existing = connection.execute(
@@ -109,7 +109,9 @@ class CaptureStore:
             ).fetchone()[0]
             folder = self.upload_dir / str(document_id)
             folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{page_id}.jpg"
+            if extension not in {".jpg", ".pdf"}:
+                raise ValueError("Unsupported stored document format")
+            filename = f"{page_id}{extension}"
             temporary_path = None
             try:
                 with NamedTemporaryFile(dir=folder, suffix=".tmp", delete=False) as temporary:

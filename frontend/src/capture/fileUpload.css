@@ -6,3 +6,5 @@
 .upload-files button { min-height: 48px; padding: 8px; font: inherit; flex-shrink: 0; }
 .file-upload [role="alert"] { color: var(--red); }
 .upload-processing { position: fixed; inset: 0; z-index: 100; max-width: 480px; margin: auto; }
+
+.upload-files .upload-pdf { flex: 0 0 64px; height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--red); background: white; }
