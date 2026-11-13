@@ -87,14 +87,17 @@
 @keyframes sh { to { background-position: -200% 0; } }
 .empty { text-align: center; color: var(--ink2); padding: 20px 0; }
 
+/* 상세 — 위쪽 문서 이름 (상단 줄 대신 본문 맨 위에) */
+.doc-name { margin: 0 0 -8px; font-weight: 700; }
+
 /* 상세 — 요약 */
 .sum-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .sum-list li { display: flex; gap: 12px; font-size: 1.12em; line-height: 1.55; }
-.num {
-  flex: none; width: 34px; height: 34px; border-radius: 50%;
-  background: var(--ink); color: #fff;
-  display: grid; place-items: center; font-weight: 700; font-size: .85em; margin-top: 2px;
+.num {  /* 동그라미 없이 숫자만 */
+  flex: none; min-width: 1.1em;
+  font-family: var(--display); font-size: 1.2em; line-height: 1; color: var(--ink);
 }
+.sum-list li, .warn li { align-items: baseline; }
 
 /* 상세 — 날짜 */
 .cal { display: flex; gap: 16px; align-items: center; }
@@ -128,7 +131,7 @@
 /* 상세 — 주의할 점 */
 .warn { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .warn li { display: flex; gap: 12px; background: var(--red-soft); border-radius: 18px; padding: 14px; font-size: 1.08em; }
-.warn .num { background: var(--red); }
+.warn .num { color: var(--red); }
 
 /* 상세 — 연락처 */
 .tel {
@@ -161,7 +164,37 @@
 .tile.wide > div { flex: 1; min-width: 0; }
 .tile:active { transform: scale(.98); }
 
+/* ═══════════ D: 움직이는 효과 ═══════════ */
+
+/* 강조 — 중요한 곳은 굵게, 낱말이 하나씩 아래에서 떠오름 (위치·투명도만 움직여 가벼움) */
+.mark { font-weight: 700; color: var(--ink); }
+.mark .rise {
+  display: inline-block;
+  animation: rise .9s var(--d, 0s) cubic-bezier(.25, .6, .3, 1) both;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(.3em); } }
+.mark .glue { white-space: nowrap; }
+.mark .after { font-weight: 400; }
+.tel .mark { font-weight: inherit; }  /* 전화번호 글꼴은 굵기가 하나뿐 */
+
+/* 차례로 나타나기 — style의 --i(순서)만큼 늦게 */
+.pop-in { animation: pop-in .8s calc(var(--i, 0) * 90ms + 80ms) cubic-bezier(.25, .6, .3, 1) both; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* 날짜 칸 — 살짝 작았다가 제자리로 */
+.cal .day { animation: day-in .8s .08s cubic-bezier(.25, .6, .3, 1) both; }
+@keyframes day-in { from { opacity: 0; transform: scale(.94); } }
+.dday { animation: pop-in .8s .7s cubic-bezier(.25, .6, .3, 1) both; }
+
+/* 준비물 — 체크 표시를 펜으로 그리듯 */
+.check .box svg path { stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset .3s .05s ease-out; }
+.check button[aria-pressed="true"] .box svg path { stroke-dashoffset: 0; }
+.check button[aria-pressed="true"] .box { animation: box-pop .3s ease-out; }
+@keyframes box-pop { 50% { transform: scale(1.18); } }
+
 @media (prefers-reduced-motion: reduce) {
   .shimmer { animation: none; }
   .tile:active { transform: none; }
+  .mark .rise, .pop-in, .cal .day, .dday, .check button .box { animation: none; }
+  .check .box svg path { transition: none; }
 }

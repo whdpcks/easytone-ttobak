@@ -8,17 +8,19 @@ import Icon from '../utils/icons';
 import { api } from '../api/client';
 import { useT } from '../common/i18n';
 
+let lastCount = null;  // 지난번 보관함 개수 — 다시 올 때 글자가 바뀌며 깜빡이지 않게
+
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useSettings();
-  const [count, setCount] = useState(null);
+  const [count, setCount] = useState(lastCount);
   const t = useT();
 
   // 보관함 개수 (D의 GET /documents). 아직 없으면 개수 없이 보여줌
   useEffect(() => {
     const ctrl = new AbortController();
     api.get('/documents', { signal: ctrl.signal })
-      .then(list => Array.isArray(list) && setCount(list.length))
+      .then(list => { if (Array.isArray(list)) { lastCount = list.length; setCount(list.length); } })
       .catch(() => {});
     return () => ctrl.abort();
   }, []);

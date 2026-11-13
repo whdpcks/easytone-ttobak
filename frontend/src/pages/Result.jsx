@@ -1,14 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
-import Header from '../common/Header';
 import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { useDocument } from '../hooks/useDocument';
 import { formatDay, formatTime } from '../utils/datetime';
-import { DocError, DocLoading, FallbackNotice } from './DocStatus';
+import { DocError, DocHeader, DocLoading, FallbackNotice } from './DocStatus';
 
 /* ───────────────────────────────────────────
    분석 결과 화면 (SCR-08) — 보관함 [보기]에서 진입
@@ -20,19 +19,19 @@ export default function Result() {
   const navigate = useNavigate();
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
-  const { doc, error, translating, fallback, retry } = useDocument(docId);
+  const { doc, error, fallback, retry } = useDocument(docId);
 
   const intro = doc && t('d.intro', { title: doc.title, s: doc.summary?.[0] ?? '' });
   useVoice(intro);
 
   if (error) return <DocError error={error} />;
-  if (!doc) return <DocLoading translating={translating} />;
+  if (!doc) return <DocLoading />;
 
   const cfg = CAT_CONFIG[doc.category] ?? CAT_CONFIG['기타'];
 
   return (
     <div className="app">
-      <Header left="back" voiceText={intro} />
+      <DocHeader voiceText={intro} />
 
       <div className="body">
         {fallback && <FallbackNotice onRetry={retry} />}
