@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sqlite3
 from contextlib import contextmanager, closing
 from datetime import datetime, timedelta, timezone
@@ -31,6 +32,23 @@ CREATE TABLE IF NOT EXISTS c_document_analyses (
 """
 
 
+
+_TRANSLATION_SCHEMA = """
+CREATE TABLE IF NOT EXISTS c_document_translations (
+    document_id INTEGER NOT NULL,
+    lang TEXT NOT NULL,
+    source_hash TEXT NOT NULL,
+    result_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (document_id, lang)
+);
+"""
+
+def _source_hash(source: dict[str, Any]) -> str:
+    encoded = json.dumps(source, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -43,6 +61,7 @@ class SQLiteAnalysisStore:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         with self._db() as conn:
             conn.executescript(_SCHEMA)
+            conn.executescript(_TRANSLATION_SCHEMA)
             # 기존 C DB를 유지하면서 실행 세대 번호만 추가합니다.
             columns = {row[1] for row in conn.execute("PRAGMA table_info(c_document_analyses)")}
             if "attempt" not in columns:
@@ -142,6 +161,7 @@ class SQLiteAnalysisStore:
             )
             if cursor.rowcount != 1:
                 raise AnalysisNotReady("완료할 분석을 찾지 못했어요.")
+            conn.execute("DELETE FROM c_document_translations WHERE document_id = ?", (document_id,))
 
     def fail(self, document_id: int, message: str, *, attempt: int | None = None) -> None:
         with self._db() as conn:
@@ -168,6 +188,44 @@ class SQLiteAnalysisStore:
             "done": row["status"] in ("completed", "failed"),
             "error": row["error"],
         }
+
+
+    def get_translation(self, document_id: int, lang: str, original: dict[str, Any]) -> dict[str, Any] | None:
+        """원본 결과가 바뀌지 않았을 때에만 이전 번역을 반환한다."""
+        with self._db() as conn:
+            row = conn.execute(
+                "SELECT source_hash, result_json FROM c_document_translations "
+                "WHERE document_id = ? AND lang = ?", (document_id, lang)
+            ).fetchone()
+        if not row or row["source_hash"] != _source_hash(original):
+            return None
+        return json.loads(row["result_json"])
+
+    def save_translation(
+        self, document_id: int, lang: str,
+        original: dict[str, Any], translated: dict[str, Any],
+    ) -> None:
+        """번역 중 원본 분석이 변경됐다면 오래된 번역을 캐시하지 않는다."""
+        fingerprint = _source_hash(original)
+        serialized = json.dumps(translated, ensure_ascii=False, separators=(",", ":"))
+        with self._db() as conn:
+            row = conn.execute(
+                "SELECT status, result_json FROM c_document_analyses WHERE document_id = ?",
+                (document_id,),
+            ).fetchone()
+            if not row or row["status"] != "completed" or not row["result_json"]:
+                raise AnalysisNotReady("아직 결과를 볼 수 없어요.")
+            if _source_hash(json.loads(row["result_json"])) != fingerprint:
+                raise AnalysisNotReady("문서 결과가 변경됐어요. 다시 조회해 주세요.")
+            conn.execute(
+                "INSERT INTO c_document_translations "
+                "(document_id, lang, source_hash, result_json, updated_at) "
+                "VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(document_id, lang) DO UPDATE SET "
+                "source_hash = excluded.source_hash, result_json = excluded.result_json, "
+                "updated_at = excluded.updated_at",
+                (document_id, lang, fingerprint, serialized, _utc_now()),
+            )
 
     def result(self, document_id: int) -> dict[str, Any]:
         with self._db() as conn:
