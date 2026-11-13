@@ -9,4 +9,3 @@ export const CAT_CONFIG = {
 };
 
 export const CATEGORIES = ['전체', ...Object.keys(CAT_CONFIG)];
-export const SUGGESTIONS = ['일하는거', '돈 내는거', '병원', '손주 학교'];

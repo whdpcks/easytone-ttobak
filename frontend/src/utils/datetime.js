@@ -1,4 +1,12 @@
-/* C 규격: date "YYYY-MM-DD", time "HH:MM" (24시간) */
+/* C 규격: date "YYYY-MM-DD", time "HH:MM" (24시간)
+   lang은 A 설정의 사용할 말(ko, en, zh …). 한국어는 시안 그대로, 다른 말은 그 나라 날짜 표기. */
+const BCP47 = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', vi: 'vi-VN', th: 'th-TH', id: 'id-ID', fil: 'fil-PH', km: 'km-KH', my: 'my-MM', hi: 'hi-IN', ne: 'ne-NP' };
+const locale = (lang) => BCP47[lang] || 'ko-KR';
+const fmt = (lang, date, opts) => {
+  try { return new Intl.DateTimeFormat(locale(lang), opts).format(date); }
+  catch { return new Intl.DateTimeFormat('en-US', opts).format(date); }
+};
+
 export function parseDate(s) {
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d);
@@ -10,14 +18,34 @@ export function daysUntil(date) {
   return Math.round((date - today) / 86400000);
 }
 
-export function formatTime(t) {
+/* "오전 9시" / "9:00 AM" */
+export function formatTime(t, lang = 'ko') {
   if (!t) return null;
   const [h, m] = t.split(':').map(Number);
-  return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}시${m ? ` ${m}분` : ''}`;
+  if (lang === 'ko') return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}시${m ? ` ${m}분` : ''}`;
+  return fmt(lang, new Date(2000, 0, 1, h, m), { hour: 'numeric', minute: '2-digit' });
 }
 
-/* "11월 20일 금요일" */
-export function formatDay(s) {
+/* "11월 20일 금요일" / "Friday, November 20" */
+export function formatDay(s, lang = 'ko') {
   const d = parseDate(s);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${d.toLocaleDateString('ko-KR', { weekday: 'long' })}`;
+  if (lang === 'ko') return `${d.getMonth() + 1}월 ${d.getDate()}일 ${d.toLocaleDateString('ko-KR', { weekday: 'long' })}`;
+  return fmt(lang, d, { month: 'long', day: 'numeric', weekday: 'long' });
+}
+
+/* 음성용 "11월 20일" / "November 20" */
+export function formatMonthDay(date, lang = 'ko') {
+  if (lang === 'ko') return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  return fmt(lang, date, { month: 'long', day: 'numeric' });
+}
+
+/* 달력 칸 위: "11월" / "Nov" */
+export function formatMonthShort(date, lang = 'ko') {
+  if (lang === 'ko') return `${date.getMonth() + 1}월`;
+  return fmt(lang, date, { month: 'short' });
+}
+
+/* 달력 칸 아래: "금" / "Fri" */
+export function formatWeekdayShort(date, lang = 'ko') {
+  return fmt(lang, date, { weekday: 'short' });
 }

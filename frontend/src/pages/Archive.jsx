@@ -1,11 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
 import Header, { HeaderButton } from '../common/Header';
 import { useUI } from '../common/UIContext';
-import { CAT_CONFIG, CATEGORIES, SUGGESTIONS } from '../utils/catConfig';
+import { useSettings } from '../common/SettingsContext';
+import { useT } from '../common/i18n';
+import { CAT_CONFIG, CATEGORIES } from '../utils/catConfig';
+import { catLabel, docLang, suggestions } from '../utils/archiveText';
 import { getDocuments, searchDocuments } from '../api/documents';
+import { useTranslatedDocs } from '../hooks/useDocument';
 
 /* ───────────────────────────────────────────
    보관함 메인 화면 (SCR-10)
@@ -14,6 +18,8 @@ import { getDocuments, searchDocuments } from '../api/documents';
 export default function Archive() {
   const navigate = useNavigate();
   const { toast } = useUI();
+  const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
+  const t = useT();
 
   const [docs,         setDocs]         = useState([]);
   const [category,     setCategory]     = useState('전체');
@@ -22,15 +28,15 @@ export default function Archive() {
   const [isSearching,  setIsSearching]  = useState(false);
   const inputRef = useRef(null);
 
-  /* 목록 로드 */
+  /* 목록 로드 (사용할 말이 바뀌면 다시 — 번역해 둔 문서는 번역본으로 옴) */
   useEffect(() => {
     if (searchResult) return; // 검색 중엔 목록 갱신 안 함
     loadDocs();
-  }, [category]);
+  }, [category, lang]);
 
   async function loadDocs() {
     try {
-      const params = category !== '전체' ? { category } : {};
+      const params = category !== '전체' ? { category, lang } : { lang };
       const data = await getDocuments(params);
       setDocs(data);
     } catch (e) {
@@ -38,12 +44,18 @@ export default function Archive() {
     }
   }
 
+  /* 아직 번역이 없는 문서는 하나씩 번역을 받아 바꿔 끼움 */
+  const shownDocs = useTranslatedDocs(docs);
+  const resultDocs = useMemo(() => searchResult?.results.map(r => r.doc) ?? [], [searchResult]);
+  const shownResultDocs = useTranslatedDocs(resultDocs);
+  const shownResults = searchResult?.results.map((r, i) => ({ ...r, doc: shownResultDocs[i] || r.doc })) ?? [];
+
   /* 화면 안내 음성 */
   const guide = !searchResult
-    ? '보관함이에요. 찾고 싶은 것을 적거나, 추천 검색어를 눌러주세요.'
+    ? t('d.guide')
     : searchResult.results.length
-      ? `"${searchResult.query}"와 관련된 문서를 ${searchResult.results.length}개 찾았어요. ${searchResult.results.map(r => r.doc?.title).join(', ')}.`
-      : '관련된 문서를 못 찾았어요.';
+      ? t('d.foundVoice', { q: searchResult.query, n: searchResult.results.length, titles: shownResults.map(r => r.doc?.title).join(', ') })
+      : t('d.noneVoice');
 
   useVoice(guide);
 
@@ -56,10 +68,10 @@ export default function Archive() {
     setIsSearching(true);
     setSearchResult(null);
     try {
-      const results = await searchDocuments(trimmed);
+      const results = await searchDocuments(trimmed, lang);
       setSearchResult({ query: trimmed, results });
     } catch (e) {
-      toast('검색 중 오류가 났어요. 다시 시도해주세요.');
+      toast(t('d.searchErr'));
     } finally {
       setIsSearching(false);
     }
@@ -70,7 +82,7 @@ export default function Archive() {
   }
 
   /* 필터링된 목록 */
-  const filteredDocs = docs.filter(d =>
+  const filteredDocs = shownDocs.filter(d =>
     category === '전체' || d.category === category
   );
 
@@ -78,16 +90,16 @@ export default function Archive() {
   function conceptText() {
     if (!searchResult?.results.length) return null;
     const cats = [...new Set(searchResult.results.map(r => r.doc?.category).filter(Boolean))];
-    return cats.length ? cats.join(', ') : searchResult.query;
+    return cats.length ? cats.map(c => catLabel(t, c)).join(', ') : searchResult.query;
   }
 
   return (
     <div className="app">
       <Header
         left="home"
-        title="보관함"
+        title={t('d.title')}
         voiceText={guide}
-        right={<HeaderButton icon="user" label="내정보" onClick={() => navigate('/me')} />}
+        right={<HeaderButton icon="user" label={t('hdr.me')} onClick={() => navigate('/me')} />}
       />
 
       <div className="body">
@@ -99,29 +111,29 @@ export default function Archive() {
           <Icon name="search" />
           <input
             ref={inputRef}
-            placeholder="예: 일하는거, 병원"
+            placeholder={t('d.searchPh')}
             defaultValue={query}
-            aria-label="검색어"
+            aria-label={t('d.searchAria')}
           />
           <button
             type="button"
             className="mic"
-            aria-label="말로 찾기"
+            aria-label={t('d.mic')}
             onClick={() => {
-              /* 음성 입력 — P1, 시연에서는 '일하는거' 자동 타이핑 */
-              const q = '일하는거';
+              /* 음성 입력 — P1, 시연에서는 첫 추천어('일하는거') 자동 타이핑 */
+              const q = t('d.sugg1');
               inputRef.current.value = q;
               doSearch(q);
             }}
           >
             <Icon name="mic" />
           </button>
-          <button type="submit">찾기</button>
+          <button type="submit">{t('d.find')}</button>
         </form>
 
         {/* 추천 검색어 */}
         <div className="sugg">
-          {SUGGESTIONS.map(s => (
+          {suggestions(t).map(s => (
             <button
               key={s}
               onClick={() => { inputRef.current.value = s; doSearch(s); }}
@@ -132,7 +144,7 @@ export default function Archive() {
         </div>
 
         {/* 카테고리 필터 */}
-        <div className="cats" role="group" aria-label="카테고리 필터">
+        <div className="cats" role="group" aria-label={t('d.catAria')}>
           {CATEGORIES.map(c => (
             <button
               key={c}
@@ -144,23 +156,25 @@ export default function Archive() {
                 if (inputRef.current) inputRef.current.value = '';
               }}
             >
-              {c}
+              {catLabel(t, c)}
             </button>
           ))}
         </div>
 
         {/* 결과 영역 */}
         {isSearching ? (
-          <SearchingState query={inputRef.current?.value || query} />
+          <SearchingState t={t} query={inputRef.current?.value || query} />
         ) : searchResult ? (
           <SearchResultView
-            result={searchResult}
+            t={t}
+            result={{ ...searchResult, results: shownResults }}
             conceptText={conceptText()}
             onOpen={openDoc}
             onClear={() => { setSearchResult(null); setQuery(''); if (inputRef.current) inputRef.current.value = ''; loadDocs(); }}
           />
         ) : (
           <DocList
+            t={t}
             docs={filteredDocs}
             category={category}
             onOpen={openDoc}
@@ -173,12 +187,12 @@ export default function Archive() {
 }
 
 /* ── 로딩 중 ── */
-function SearchingState({ query }) {
+function SearchingState({ t, query }) {
   return (
     <div className="list">
       <div className="ai-say">
         <span className="spark">AI</span>
-        <span>"{query}"의 뜻을 생각하는 중…</span>
+        <span>{t('d.thinking', { q: query })}</span>
       </div>
       <div className="shimmer" />
       <div className="shimmer" />
@@ -187,8 +201,11 @@ function SearchingState({ query }) {
 }
 
 /* ── AI 검색 결과 ── */
-function SearchResultView({ result, conceptText, onOpen, onClear }) {
+function SearchResultView({ t, result, conceptText, onOpen, onClear }) {
   const hasResults = result.results.length > 0;
+  // {c} 자리에 형광펜 글자를 넣으려고 문장을 둘로 나눔 (언어마다 어순이 달라서)
+  const MARK = '\u0000';
+  const [before, after = ''] = t('d.understood', { q: result.query, n: result.results.length, c: MARK }).split(MARK);
   return (
     <div className="list">
       <div className="ai-say">
@@ -196,32 +213,32 @@ function SearchResultView({ result, conceptText, onOpen, onClear }) {
         <span>
           {hasResults
             ? <>
-                "{result.query}"를{' '}
+                {before}
                 {conceptText && <b style={{ background: 'var(--hl)', padding: '0 4px' }}>{conceptText}</b>}
-                {' '}관련으로 이해했어요. 문서 {result.results.length}개를 찾았어요.
+                {after}
               </>
-            : `"${result.query}"와 관련된 문서를 못 찾았어요. 다른 말로 찾아보세요.`}
+            : t('d.noResult', { q: result.query })}
         </span>
       </div>
 
       {result.results.map(r => (
-        <DocRow key={r.id} doc={r.doc} why={r.reason} onOpen={() => onOpen(r.id)} />
+        <DocRow key={r.id} t={t} doc={r.doc} why={r.reason} onOpen={() => onOpen(r.id)} />
       ))}
 
       {hasResults && (
-        <button className="btn ghost" onClick={onClear}>전체 목록 보기</button>
+        <button className="btn ghost" onClick={onClear}>{t('d.showAll')}</button>
       )}
     </div>
   );
 }
 
 /* ── 일반 목록 ── */
-function DocList({ docs, category, onOpen }) {
+function DocList({ t, docs, category, onOpen }) {
   if (!docs.length) {
     return (
       <div className="list">
         <p className="empty">
-          {category !== '전체' ? `${category} 문서가 없어요.` : '아직 찍어둔 문서가 없어요.'}
+          {category !== '전체' ? t('d.emptyCat', { c: catLabel(t, category) }) : t('d.empty')}
         </p>
       </div>
     );
@@ -229,14 +246,14 @@ function DocList({ docs, category, onOpen }) {
   return (
     <div className="list">
       {docs.map(d => (
-        <DocRow key={d.id} doc={d} onOpen={() => onOpen(d.id)} />
+        <DocRow key={d.id} t={t} doc={d} onOpen={() => onOpen(d.id)} />
       ))}
     </div>
   );
 }
 
 /* ── 문서 카드 한 줄 ── */
-function DocRow({ doc, why, onOpen }) {
+function DocRow({ t, doc, why, onOpen }) {
   if (!doc) return null;
   const cfg = CAT_CONFIG[doc.category] ?? { c: '#4A5066', s: '#ECECE6', icon: 'doc' };
   return (
@@ -252,8 +269,8 @@ function DocRow({ doc, why, onOpen }) {
         <small>{[doc.sender, doc.created_at.replace(/-/g, '.')].filter(Boolean).join(' · ')}</small>
         {why && <span className="why">{why}</span>}
       </div>
-      <button className="open" onClick={onOpen} aria-label={`${doc.title} 보기`}>
-        보기
+      <button className="open" onClick={onOpen} aria-label={t('d.openAria', { title: doc.title })}>
+        {t('d.open')}
       </button>
     </div>
   );

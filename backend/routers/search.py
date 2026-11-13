@@ -10,7 +10,7 @@ D 담당 — GET /search?q=검색어  → [{id, reason, doc}]
 import os, json, re, logging
 from fastapi import APIRouter, Depends
 from common.auth import get_current_user
-from database import completed_documents
+from database import completed_documents, with_cached_translations
 from openai import OpenAI
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -78,7 +78,11 @@ def llm_config() -> tuple[str, str, str] | None:
     return None
 
 
-def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
+# 이유(reason)를 쓸 언어 — D는 한·영·일·중만 지원 (그 외 언어는 영어로)
+REASON_LANG = {"ko": "Korean", "en": "English", "ja": "Japanese", "zh": "Simplified Chinese"}
+
+
+def llm_search(q: str, doc_list: list[dict], lang: str = "ko") -> list[dict]:
     """LLM에 목록을 주고 관련 문서와 이유를 받음"""
     config = llm_config()
     if not config:
@@ -95,6 +99,7 @@ def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
         ensure_ascii=False
     )
 
+    reason_lang = REASON_LANG.get(lang, "Korean")
     prompt = f"""다음은 사용자 문서 목록입니다:
 {summary_list}
 
@@ -103,16 +108,21 @@ def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
 
 사용자가 이 검색어로 찾으려는 문서를 골라 아래 형식으로만 답하세요:
 [
-  {{"id": 1, "reason": "한 줄 이유 (한국어, 15자 이내)"}},
+  {{"id": 1, "reason": "한 줄 이유 ({reason_lang}, 아주 짧고 쉬운 말)"}},
   ...
 ]
 - 문서의 주제가 검색어의 뜻과 맞을 때만 고르세요.
 - "날", "안내"처럼 낱말 하나가 겹친다고 고르지 마세요. 억지로 연결하지 마세요.
-- 맞는 문서가 없으면 빈 배열 []을 반환하세요."""
+- 맞는 문서가 없으면 빈 배열 []을 반환하세요.
+- IMPORTANT: write every "reason" in {reason_lang} only."""
 
     resp = client.chat.completions.create(
         model=model,
-        messages=[{"role": "user", "content": prompt}],
+        messages=[
+            {"role": "system", "content": f"You search the user's documents. Reply with JSON only. "
+                                          f"Every \"reason\" value must be written in {reason_lang}, never in another language."},
+            {"role": "user", "content": prompt},
+        ],
         temperature=0,
         max_tokens=800,
     )
@@ -131,8 +141,10 @@ def llm_search(q: str, doc_list: list[dict]) -> list[dict]:
 
 
 @router.get("")
-def search(q: str, user: dict = Depends(get_current_user)):
-    """AI 검색 — 내 문서 중에서 [{id, reason, doc}], doc은 C의 결과 JSON 그대로"""
+def search(q: str, lang: str = "ko", user: dict = Depends(get_current_user)):
+    """AI 검색 — 내 문서 중에서 [{id, reason, doc}], doc은 C의 결과 JSON 그대로.
+    lang: 이유를 그 언어로 쓰고, C가 번역해 둔 문서는 번역본으로 돌려줌"""
+    lang = lang if lang in REASON_LANG else "en"
     doc_list = completed_documents(user["id"])
 
     if not doc_list:
@@ -140,7 +152,7 @@ def search(q: str, user: dict = Depends(get_current_user)):
 
     # 1. LLM 시도
     try:
-        llm_results = llm_search(q, doc_list)
+        llm_results = llm_search(q, doc_list, lang)
     except Exception as exc:  # AI가 안 되면 키워드 검색만 사용
         log.warning("AI 검색 실패, 키워드 검색만 사용: %s: %s", type(exc).__name__, exc)
         llm_results = []
@@ -159,6 +171,10 @@ def search(q: str, user: dict = Depends(get_current_user)):
             merged[rid] = {"id": rid, "reason": r.get("reason", ""), "doc": id_to_doc[rid]}
     for r in kw_results:
         if r["id"] not in merged:
-            merged[r["id"]] = r
+            # 키워드 검색 이유는 한국어 문장이라 다른 언어에서는 비움
+            merged[r["id"]] = r if lang == "ko" else {**r, "reason": ""}
 
-    return list(merged.values())
+    results = list(merged.values())
+    # 번역해 둔 문서는 번역본으로 (검색은 한국어 원본 기준, 보여주기만 번역)
+    translated = with_cached_translations([r["doc"] for r in results], lang)
+    return [{**r, "doc": d} for r, d in zip(results, translated)]

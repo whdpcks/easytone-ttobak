@@ -25,3 +25,19 @@ def completed_documents(user_id: int) -> list[dict]:
     docs = [json.loads(raw) for (raw,) in rows]
     docs.sort(key=lambda d: (d["created_at"], d["id"]), reverse=True)
     return docs
+
+
+def with_cached_translations(docs: list[dict], lang: str | None) -> list[dict]:
+    """C가 이미 번역해 둔 문서(c_document_translations)는 번역본으로 바꿉니다.
+    번역본에는 "lang"을 붙이고, 아직 번역이 없는 문서는 한국어 원본 그대로 둡니다.
+    (새 번역은 만들지 않습니다 — 프론트가 C의 /documents/{id}/translation 으로 요청)"""
+    if not lang or lang == "ko" or not docs:
+        return docs
+    from c_analysis.storage import SQLiteAnalysisStore  # C의 캐시 규칙(원본이 바뀌면 무효)을 그대로 사용
+
+    store = SQLiteAnalysisStore(DB_PATH)
+    out = []
+    for doc in docs:
+        cached = store.get_translation(doc["id"], lang, doc)
+        out.append({**cached, "lang": lang} if cached else doc)
+    return out
