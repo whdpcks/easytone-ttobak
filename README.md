@@ -208,8 +208,8 @@ npm run build
 
 ## 08. 팀원 소개
 
-| 팀원 | 주요 역할 | 담당한 기능 |
-| --- | --- | --- |
+| 팀원 | 주요 역할 | 담당한 기능 | GitHub |
+| --- | --- | --- | --- |
 | [@haneul-dev](https://github.com/haneul-dev) | 공통 화면·접근성 | 회원가입·로그인, 글씨 크기와 음성 안내, 사용자 설정 |
 | [@stone0min](https://github.com/stone0min) | 문서 촬영·업로드 | 카메라 자동 촬영, 이미지·PDF 검증과 저장, 분석 요청 연결 |
 | [@whdpcks](https://github.com/whdpcks) | AI 문서 분석·번역 | Document Parse와 Solar 연동, 날짜·금액 검증, 분석 결과 저장과 번역 API |
