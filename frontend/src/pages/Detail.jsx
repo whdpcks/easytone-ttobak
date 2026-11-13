@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
-import Header from '../common/Header';
 import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
 import { CAT_CONFIG } from '../utils/catConfig';
@@ -10,7 +9,8 @@ import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
 import { useDocument, useTranslatedDocs } from '../hooks/useDocument';
 import { parseDate, daysUntil, formatTime, formatMonthDay, formatMonthShort, formatWeekdayShort } from '../utils/datetime';
-import { DocError, DocLoading, FallbackNotice } from './DocStatus';
+import { DocError, DocHeader, DocLoading, FallbackNotice } from './DocStatus';
+import { Mark, markAll, markNumbers } from '../utils/marks';
 
 /* ───────────────────────────────────────────
    상세 화면 (SCR-09) — 7종 타입
@@ -35,10 +35,11 @@ export default function Detail() {
   const props = { doc, t, lang };
   return (
     <div className="app">
-      <Header left="back" title={doc.title} voiceText={guide} />
+      <DocHeader voiceText={guide} />
 
       <div className="body">
         {fallback && <FallbackNotice onRetry={retry} />}
+        <p className="sub doc-name">{doc.title}</p>
         {type === 'summary'  && <SummaryScreen   {...props} />}
         {type === 'datetime' && <DateTimeScreen  {...props} />}
         {type === 'place'    && <PlaceScreen     {...props} />}
@@ -57,6 +58,7 @@ export default function Detail() {
    1. 요약
 ══════════════════════════════════════════= */
 function SummaryScreen({ doc, t }) {
+  const clock = { t: 80 };  // 줄을 넘어 차례로 떠오르게 같은 clock을 씀
   return (
     <>
       <h1 className="h">{t('d.glance')}</h1>
@@ -65,7 +67,7 @@ function SummaryScreen({ doc, t }) {
           {(doc.summary || []).map((s, i) => (
             <li key={i}>
               <span className="num">{i + 1}</span>
-              <span>{s}</span>
+              <span>{summaryLine(s, i, clock)}</span>
             </li>
           ))}
         </ol>
@@ -97,7 +99,7 @@ function DateTimeScreen({ doc, t, lang }) {
             </div>
           )}
           <div>
-            <b style={{ fontSize: '1.35em', lineHeight: 1.3 }}>{formatTime(dt.time, lang) || t('d.allDay')}</b>
+            <b style={{ fontSize: '1.35em', lineHeight: 1.3 }}><Mark delay={60}>{formatTime(dt.time, lang) || t('d.allDay')}</Mark></b>
             <br />
             {dday !== null && (
               <span className="dday">
@@ -109,7 +111,7 @@ function DateTimeScreen({ doc, t, lang }) {
       </div>
       {dt.note && (
         <div className="card">
-          <p style={{ margin: 0, fontSize: '1.08em' }}>{dt.note}</p>
+          <p style={{ margin: 0, fontSize: '1.08em' }}>{markNumbers(dt.note, { t: 300 })}</p>
         </div>
       )}
       {dt.check && (
@@ -137,7 +139,7 @@ function PlaceScreen({ doc, t }) {
       {pl.address && (
         <div className="card">
           <p style={{ margin: '0 0 6px', fontWeight: 700 }}>{t('d.address')}</p>
-          <p style={{ margin: 0, fontSize: '1.1em', userSelect: 'all' }}>{pl.address}</p>
+          <p style={{ margin: 0, fontSize: '1.1em', userSelect: 'all' }}><Mark delay={60}>{pl.address}</Mark></p>
         </div>
       )}
       {pl.note && (
@@ -174,6 +176,8 @@ function ItemsScreen({ doc, t, checked, setChecked }) {
         {items.map((it, i) => (
           <button
             key={i}
+            className="pop-in"
+            style={{ '--i': i }}
             aria-pressed={!!checked[`${doc.id}-${i}`]}
             onClick={() => toggle(i)}
           >
@@ -196,14 +200,15 @@ function ItemsScreen({ doc, t, checked, setChecked }) {
 ══════════════════════════════════════════= */
 function CautionsScreen({ doc, t }) {
   const cautions = doc.cautions || [];
+  const clock = { t: 80 };
   return (
     <>
       <h1 className="h">{t('d.cautionsH')}</h1>
       <ol className="warn">
         {cautions.map((c, i) => (
           <li key={i}>
-            <span className="num" style={{ background: 'var(--red)' }}>{i + 1}</span>
-            <span>{c}</span>
+            <span className="num">{i + 1}</span>
+            <span>{markNumbers(c, clock)}</span>
           </li>
         ))}
       </ol>
@@ -224,7 +229,7 @@ function ContactScreen({ doc, t }) {
       <h1 className="h">{t('d.callH')}</h1>
       <div className="card">
         {ct.name && <p className="sub" style={{ margin: 0 }}>{ct.name}</p>}
-        {num && <div className="tel">{num}</div>}
+        {num && <div className="tel"><Mark>{num}</Mark></div>}
         {/* '국번없이 1345(…)'처럼 번호에 설명이 붙어 있으면 작게 함께 보여줌 */}
         {ct.phone && ct.phone !== num && <p className="sub" style={{ margin: '6px 0 0' }}>{ct.phone}</p>}
       </div>
@@ -305,6 +310,12 @@ function CategoryScreen({ doc, t, lang, navigate }) {
       </div>
     </>
   );
+}
+
+/* 요약 한 줄 — 날짜·시간·금액을 강조. 첫 줄에 숫자가 없으면 첫 줄을 통째로 */
+function summaryLine(text, i, clock) {
+  const marked = markNumbers(text, clock);
+  return i === 0 && marked === text ? markAll(text, clock) : marked;
 }
 
 /* 전화번호 칸에서 번호만 꺼냄 ('국번없이 1345(…)' → '1345', '02-1234-5678' → 그대로) */
