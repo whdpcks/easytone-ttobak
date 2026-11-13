@@ -4,6 +4,7 @@ import Header from '../common/Header';
 import { api } from '../api/client';
 import DocumentProcessing from './DocumentProcessing';
 import './fileUpload.css';
+import Icon from '../utils/icons';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -32,8 +33,8 @@ export default function FileUpload() {
     const selected = Array.from(event.target.files || []);
     event.target.value = '';
     if (!selected.length || locked) return;
-    if (selected.some(file => !/\.(jpe?g|png)$/i.test(file.name))) {
-      setError('JPG 또는 PNG 파일을 선택해 주세요. PDF는 아직 지원하지 않아요.');
+    if (selected.some(file => !/\.(jpe?g|png|pdf)$/i.test(file.name))) {
+      setError('JPG, PNG 또는 PDF 파일을 선택해 주세요.');
       return;
     }
     if (selected.some(file => !file.size || file.size > MAX_BYTES)) {
@@ -89,17 +90,19 @@ export default function FileUpload() {
       <Header title="파일 업로드" />
       <main className="body">
         <h1 className="h">문서 파일을<br />선택해 주세요</h1>
-        <p>JPG·PNG 사진을 여러 장 선택할 수 있어요.<br />파일 하나당 최대 10MB까지 올릴 수 있어요.</p>
-        <input ref={input} type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" multiple
+        <p>JPG·PNG 사진과 PDF를 선택할 수 있어요.<br />파일당 최대 10MB, PDF는 최대 100페이지까지 가능해요.</p>
+        <input ref={input} type="file" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" multiple
           hidden aria-label="문서 사진 선택" onChange={choose} disabled={locked} />
         <button className="big box" onClick={() => input.current?.click()} disabled={locked}>
           <b>{files.length ? '파일 더 선택하기' : '파일 선택하기'}</b>
         </button>
         {files.length > 0 && <>
-          <p role="status">{files.length}장 선택했어요. 아래 순서대로 읽어요.</p>
+          <p role="status">{files.length}개 파일을 선택했어요. PDF는 모든 페이지를 읽어요.</p>
           <ol className="upload-files">
             {files.map((item, index) => <li key={item.id}>
-              <img src={item.url} alt={`${index + 1}번째 문서 미리보기`} />
+              {/\.pdf$/i.test(item.file.name)
+                ? <span className="upload-pdf" aria-label="PDF 파일"><Icon name="doc" size={32} /><b>PDF</b></span>
+                : <img src={item.url} alt={`${index + 1}번째 문서 미리보기`} />}
               <span>{index + 1}. {item.file.name}</span>
               <button onClick={() => remove(item.id)} disabled={locked} aria-label={`${item.file.name} 삭제`}>삭제</button>
             </li>)}

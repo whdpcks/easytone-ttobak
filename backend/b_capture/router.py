@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from .images import CaptureError, MAX_UPLOAD_BYTES, normalize_image
 from .storage import CaptureStore
+from .pdf import validate_pdf
 
 
 class CreateDocumentRequest(BaseModel):
@@ -25,6 +26,7 @@ class PageUploaded(BaseModel):
     filename: str
     width: int
     height: int
+    file_page_count: int = 1
 
 
 class CaptureFinished(BaseModel):
@@ -63,13 +65,18 @@ def create_capture_router(store: CaptureStore, *, require_owner: Callable,
     def upload_page(document_id: int, file: UploadFile = File(...),
                     client_page_id: UUID | None = Form(default=None),
                     owner_id: str = Depends(require_owner)):
-        """JPG/PNG를 실제로 검증하고 EXIF 방향 보정, 긴 변 2000px 축소 후 촬영 순서대로 저장한다."""
+        """JPG/PNG 또는 PDF(10MB·100페이지 이하)를 검증해 저장한다. PDF의 width/height는 0이다."""
         store.document(document_id, str(owner_id))
         content = file.file.read(MAX_UPLOAD_BYTES + 1)
-        image, width, height = normalize_image(content)
+        is_pdf = content.startswith(b"%PDF-")
+        file_page_count = validate_pdf(content) if is_pdf else 1
+        if is_pdf:
+            image, width, height = content, 0, 0
+        else:
+            image, width, height = normalize_image(content)
         page_id = str(client_page_id or uuid4())
-        page = store.add_page(document_id, str(owner_id), page_id, sha256(content).hexdigest(), image, width, height)
-        return {**page, "page_id": page["id"]}
+        page = store.add_page(document_id, str(owner_id), page_id, sha256(content).hexdigest(), image, width, height, extension=".pdf" if is_pdf else ".jpg")
+        return {**page, "page_id": page["id"], "file_page_count": file_page_count}
 
     def dispatch(document_id: int, paths):
         try:
