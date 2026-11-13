@@ -9,19 +9,22 @@ import { useT } from '../common/i18n';
 import { CAT_CONFIG, CATEGORIES } from '../utils/catConfig';
 import { catLabel, docLang, suggestions } from '../utils/archiveText';
 import { getDocuments, searchDocuments } from '../api/documents';
-import { useTranslatedDocs } from '../hooks/useDocument';
+import { useTranslatedDocs, primeDocument } from '../hooks/useDocument';
 
 /* ───────────────────────────────────────────
    보관함 메인 화면 (SCR-10)
    D 담당: 목록 + 카테고리 필터 + AI 검색
 ─────────────────────────────────────────── */
+/* 지난번 받은 목록 — key: `${category}:${lang}`. 다시 올 때 바로 보여 주고 뒤에서 새로 받음 */
+const listCache = new Map();
+
 export default function Archive() {
   const navigate = useNavigate();
   const { toast } = useUI();
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
 
-  const [docs,         setDocs]         = useState([]);
+  const [docs,         setDocs]         = useState(() => listCache.get(`${'전체'}:${lang}`) ?? null);  // null = 아직 받는 중
   const [category,     setCategory]     = useState('전체');
   const [query,        setQuery]        = useState('');
   const [searchResult, setSearchResult] = useState(null); // { query, results:[{id,reason,doc}] }
@@ -38,6 +41,7 @@ export default function Archive() {
     try {
       const params = category !== '전체' ? { category, lang } : { lang };
       const data = await getDocuments(params);
+      listCache.set(`${category}:${lang}`, data);
       setDocs(data);
     } catch (e) {
       console.error(e);
@@ -78,13 +82,16 @@ export default function Archive() {
   }
 
   function openDoc(id) {
+    // 목록에 있는 문서를 넘겨 둬서 결과 화면이 바로 뜨게 함
+    const doc = [...(shownDocs ?? []), ...shownResults.map(r => r.doc)].find(d => d?.id === id);
+    primeDocument(doc, lang);
     navigate(`/result/${id}`);
   }
 
   /* 필터링된 목록 */
-  const filteredDocs = shownDocs.filter(d =>
+  const filteredDocs = shownDocs?.filter(d =>
     category === '전체' || d.category === category
-  );
+  ) ?? null;
 
   /* 검색 결과의 concept 텍스트 */
   function conceptText() {
@@ -234,6 +241,7 @@ function SearchResultView({ t, result, conceptText, onOpen, onClear }) {
 
 /* ── 일반 목록 ── */
 function DocList({ t, docs, category, onOpen }) {
+  if (!docs) return null;  // 아직 받는 중 — "문서가 없어요"가 깜빡이지 않게 비워 둠
   if (!docs.length) {
     return (
       <div className="list">

@@ -5,6 +5,8 @@
      - 한국어가 아니면 C의 번역 API로 받아요. (서버에 캐시돼서 두 번째부터는 바로 와요)
      - 번역이 실패하면 한국어 원문을 보여주고 fallback=true → 화면에 "한국어 원문" 표시 + 다시 시도
      - error: 'reading'(아직 분석 중, 409) | 'notFound'
+     - 한 번 받은 문서는 기억해 둬서 결과 ↔ 상세를 오갈 때 "불러오는 중" 없이 바로 보여 줘요.
+       (뒤에서 조용히 다시 받아 바뀐 게 있으면 바꿔 끼움)
 
    const docs = useTranslatedDocs(list);
      - 목록의 문서 중 아직 번역이 없는 것만 하나씩 번역을 받아서 바꿔 끼워요.
@@ -24,20 +26,51 @@ async function getWithRetry(id, lang) {
   }
 }
 
+/* 문서 기억 — key: `${docId}:${lang}` → 받은 문서 (번역 실패로 한국어를 보여 준 건 기억하지 않음) */
+const docCache = new Map();
+const cacheKey = (docId, lang) => `${docId}:${lang}`;
+
+/** 목록에서 이미 받은 문서를 미리 넣어 둠 → [보기]를 누르면 빈 화면 없이 바로 보임.
+    지금 쓰는 말로 된 문서만 넣음 (번역 전 한국어 문서를 다른 말 화면에 잠깐 보여 주지 않게) */
+export function primeDocument(doc, lang) {
+  if (!doc?.id || doc.status && doc.status !== 'completed') return;
+  const docLangNow = doc.lang ?? 'ko';
+  if (docLangNow !== lang) return;
+  const key = cacheKey(doc.id, lang);
+  if (!docCache.has(key)) {
+    const { lang: _ignored, ...plain } = doc;  // 목록이 붙인 lang 표시는 빼고 서버 응답 모양 그대로
+    docCache.set(key, plain);
+  }
+}
+
 export function useDocument(docId) {
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const [tick, setTick] = useState(0);
-  const [state, setState] = useState({ doc: null, error: null, translating: false, fallback: false });
+  const cached = docCache.get(cacheKey(docId, lang));
+  const [state, setState] = useState(() => (
+    { doc: cached ?? null, error: null, translating: false, fallback: false }
+  ));
 
   useEffect(() => {
     let alive = true;
-    setState({ doc: null, error: null, translating: lang !== 'ko', fallback: false });
+    const hit = docCache.get(cacheKey(docId, lang));
+    // 기억해 둔 게 있으면 그대로 보여 주고, 없을 때만 "불러오는 중"
+    setState(hit
+      ? { doc: hit, error: null, translating: false, fallback: false }
+      : { doc: null, error: null, translating: lang !== 'ko', fallback: false });
     (async () => {
       try {
         const doc = await getWithRetry(docId, lang);
-        if (alive) setState({ doc, error: null, translating: false, fallback: false });
+        docCache.set(cacheKey(docId, lang), doc);
+        if (alive) setState(prev => (
+          prev.doc && JSON.stringify(prev.doc) === JSON.stringify(doc) && !prev.fallback
+            ? prev  // 바뀐 게 없으면 다시 그리지 않음
+            : { doc, error: null, translating: false, fallback: false }
+        ));
       } catch (e) {
         if (!alive) return;
+        if (e.status === 404) docCache.delete(cacheKey(docId, lang));
+        else if (hit) return;  // 뒤에서 다시 받기만 실패 → 보여 주던 문서 그대로
         let err = e;
         // 번역만 실패(503·422·네트워크)했으면 한국어 원문으로 보여줌
         if (lang !== 'ko' && e.status !== 404 && e.status !== 409 && e.status !== 401) {

@@ -19,13 +19,13 @@ export default function Result() {
   const navigate = useNavigate();
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
-  const { doc, error, translating, fallback, retry } = useDocument(docId);
+  const { doc, error, fallback, retry } = useDocument(docId);
 
   const intro = doc && t('d.intro', { title: doc.title, s: doc.summary?.[0] ?? '' });
   useVoice(intro);
 
   if (error) return <DocError error={error} />;
-  if (!doc) return <DocLoading translating={translating} />;
+  if (!doc) return <DocLoading />;
 
   const cfg = CAT_CONFIG[doc.category] ?? CAT_CONFIG['기타'];
 

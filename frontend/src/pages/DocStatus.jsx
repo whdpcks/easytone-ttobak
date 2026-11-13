@@ -1,5 +1,5 @@
 /* D 담당 — 결과·상세 화면이 같이 쓰는 상태 표시
-   - DocLoading: 불러오는 중 / 지금 쓰는 말로 바꾸는 중
+   - DocLoading: 문서를 받는 동안 (글자 없이 상단 줄만)
    - DocError:   분석 중(409) / 문서 없음
    - FallbackNotice: 번역 실패 → "한국어 원문" 표시 + 다시 번역하기
    - DocHeader: 결과·상세 화면 상단 (뒤로 · 글씨 · 소리 · 내정보) — 불러오는 중에도 그대로 */
@@ -16,14 +16,12 @@ export function DocHeader({ voiceText }) {
   );
 }
 
-export function DocLoading({ translating }) {
-  const t = useT();
+/* 문서를 받는 동안 — 글자 없이 상단 줄만 (빈 본문). 받는 즉시 화면이 채워짐 */
+export function DocLoading() {
   return (
     <div className="app">
       <DocHeader />
-      <div className="body" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--ink2)' }} aria-live="polite">
-        {translating ? t('d.translating') : t('common.loading')}
-      </div>
+      <div className="body" aria-busy="true" />
     </div>
   );
 }

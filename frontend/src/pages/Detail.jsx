@@ -7,7 +7,7 @@ import { useT } from '../common/i18n';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
-import { useDocument, useTranslatedDocs } from '../hooks/useDocument';
+import { primeDocument, useDocument, useTranslatedDocs } from '../hooks/useDocument';
 import { parseDate, daysUntil, formatTime, formatMonthDay, formatMonthShort, formatWeekdayShort } from '../utils/datetime';
 import { DocError, DocHeader, DocLoading, FallbackNotice } from './DocStatus';
 import { Mark, markAll, markNumbers } from '../utils/marks';
@@ -23,14 +23,14 @@ export default function Detail() {
   const navigate = useNavigate();
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
-  const { doc, error, translating, fallback, retry } = useDocument(docId);
+  const { doc, error, fallback, retry } = useDocument(docId);
   const [checked, setChecked] = useState({});
 
   const guide = doc ? voiceText(doc, type, t, lang) : '';
   useVoice(guide);
 
   if (error) return <DocError error={error} />;
-  if (!doc) return <DocLoading translating={translating} />;
+  if (!doc) return <DocLoading />;
 
   const props = { doc, t, lang };
   return (
@@ -299,7 +299,7 @@ function CategoryScreen({ doc, t, lang, navigate }) {
                 </div>
                 <button
                   className="open"
-                  onClick={() => navigate(`/result/${d.id}`)}
+                  onClick={() => { primeDocument(d, lang); navigate(`/result/${d.id}`); }}
                   aria-label={t('d.openAria', { title: d.title })}
                 >
                   {t('d.open')}
