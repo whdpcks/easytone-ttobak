@@ -49,3 +49,12 @@ export function formatMonthShort(date, lang = 'ko') {
 export function formatWeekdayShort(date, lang = 'ko') {
   return fmt(lang, date, { weekday: 'short' });
 }
+
+/* 달력 칸 아래 요일을 두 조각으로: ['금', '요일'] / ['金', '曜日'] — 앞만 굵게 쓰려고.
+   한국어·일본어만 '요일'을 붙이고, 그 외는 짧은 이름 하나 ('Fri', '周五') */
+export function formatWeekdayParts(date, lang = 'ko') {
+  const short = formatWeekdayShort(date, lang);
+  if (lang === 'ko') return [short, '요일'];
+  if (lang === 'ja') return [short, '曜日'];
+  return [short, ''];
+}

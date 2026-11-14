@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
@@ -8,7 +8,7 @@ import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
 import { primeDocument, useDocument, useTranslatedDocs } from '../hooks/useDocument';
-import { parseDate, daysUntil, formatTime, formatMonthDay, formatMonthShort, formatWeekdayShort } from '../utils/datetime';
+import { parseDate, daysUntil, formatTime, formatMonthDay, formatMonthShort, formatWeekdayParts } from '../utils/datetime';
 import { DocError, DocHeader, DocLoading, FallbackNotice } from './DocStatus';
 import { Mark, markAll, markNumbers } from '../utils/marks';
 
@@ -25,6 +25,9 @@ export default function Detail() {
   const t = useT();
   const { doc, error, fallback, retry } = useDocument(docId);
   const [checked, setChecked] = useState({});
+
+  // 상세 화면은 늘 맨 위부터 — 앞 화면에서 내려 둔 스크롤이 그대로 남지 않게 (그리기 전에 올림)
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [docId, type]);
 
   const guide = doc ? voiceText(doc, type, t, lang) : '';
   useVoice(guide);
@@ -85,6 +88,7 @@ function DateTimeScreen({ doc, t, lang }) {
 
   const dateObj = dt.date ? parseDate(dt.date) : null;
   const dday    = dateObj ? daysUntil(dateObj) : null;
+  const wd      = dateObj ? formatWeekdayParts(dateObj, lang) : null;  // ['화', '요일']
 
   return (
     <>
@@ -95,7 +99,7 @@ function DateTimeScreen({ doc, t, lang }) {
             <div className="day">
               <small>{formatMonthShort(dateObj, lang)}</small>
               <b>{dateObj.getDate()}</b>
-              <span>{formatWeekdayShort(dateObj, lang)}</span>
+              <span>{wd[0]}<span className="wd-rest">{wd[1]}</span></span>
             </div>
           )}
           <div>
@@ -266,13 +270,7 @@ function CategoryScreen({ doc, t, lang, navigate }) {
         className="card"
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
       >
-        <span
-          className="cat-pill"
-          style={{ '--c': cfg.c, '--c-soft': cfg.s }}
-        >
-          <Icon name={cfg.icon} size={16} />
-          {catLabel(t, doc.category)}
-        </span>
+        <span className="cat-pill">{catLabel(t, doc.category)}</span>
         <button
           className="btn line"
           style={{ width: 'auto', minHeight: 44, padding: '0 16px' }}

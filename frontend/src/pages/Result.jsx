@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
@@ -21,6 +22,9 @@ export default function Result() {
   const t = useT();
   const { doc, error, fallback, retry } = useDocument(docId);
 
+  // 보관함에서 [보기]로 들어오면 늘 맨 위부터 — 목록에서 내려 둔 스크롤이 남지 않게 (그리기 전에 올림)
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [docId]);
+
   const intro = doc && t('d.intro', { title: doc.title, s: doc.summary?.[0] ?? '' });
   useVoice(intro);
 
@@ -38,9 +42,7 @@ export default function Result() {
         <div>
           <p className="sub">{[doc.sender, doc.created_at.replace(/-/g, '.')].filter(Boolean).join(' · ')}</p>
           <h1 className="h">{doc.title}</h1>
-          <span className="cat-pill" style={{ '--c': cfg.c, '--c-soft': cfg.s }}>
-            <Icon name={cfg.icon} size={16} />{catLabel(t, doc.category)}
-          </span>
+          <span className="cat-pill">{catLabel(t, doc.category)}</span>
         </div>
 
         <p className="sub" style={{ fontWeight: 700, color: 'var(--ink)' }}>{t('d.pick')}</p>

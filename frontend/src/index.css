@@ -48,11 +48,10 @@
   display: flex; gap: 10px; align-items: flex-start;
   background: #FFF8CC; border-radius: 16px; padding: 12px 14px; font-size: .95em;
 }
-.ai-say .spark {
-  flex: none; width: 30px; height: 30px; border-radius: 50%;
-  background: var(--ink); color: var(--hl);
+.ai-say .spark {  /* 'AI' 글자만 — 둘레 검은 동그라미 없음 */
+  flex: none; min-width: 30px; height: 30px;
   display: grid; place-items: center;
-  font-family: var(--display); font-size: .85em;
+  font-family: var(--display); font-size: 1.15em; color: #E5A800;
 }
 
 /* 문서 목록 */
@@ -108,6 +107,7 @@
 .cal .day small { display: block; background: var(--red); color: #fff; font-weight: 700; padding: 4px 0; }
 .cal .day b { display: block; font-family: var(--display); font-size: 3em; line-height: 1.1; font-weight: 400; }
 .cal .day span { display: block; font-weight: 700; padding-bottom: 6px; }
+.cal .day .wd-rest { display: inline; font-weight: 400; padding: 0; font-size: .8em; }  /* '화요일'의 '요일'은 보통 굵기 */
 .dday { display: inline-block; background: var(--hl); font-weight: 700; padding: 2px 10px; border-radius: 8px; }
 
 /* 상세 — 준비물 */
@@ -140,10 +140,10 @@
 }
 
 /* 카테고리 필 */
-.cat-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-weight: 700; font-size: .85em; padding: 4px 12px;
-  border-radius: 999px; background: var(--c-soft); color: var(--c);
+.cat-pill {  /* 아이콘 없이 글자만, 모든 분류가 같은 회색 바탕 */
+  display: inline-block;
+  font-weight: 500; font-size: .85em; padding: 2px 10px;
+  border-radius: 8px; background: #E6E6E9; color: #3F4251;
 }
 
 /* 결과 화면 타일 */
