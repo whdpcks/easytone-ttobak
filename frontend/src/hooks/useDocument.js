@@ -43,6 +43,11 @@ export function primeDocument(doc, lang) {
   }
 }
 
+/** 지운 문서는 기억에서도 뺌 (모든 언어) */
+export function forgetDocument(docId) {
+  for (const key of [...docCache.keys()]) if (key.startsWith(`${docId}:`)) docCache.delete(key);
+}
+
 export function useDocument(docId) {
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const [tick, setTick] = useState(0);

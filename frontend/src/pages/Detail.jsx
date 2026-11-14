@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
 import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
+import { useUI } from '../common/UIContext';
+import RemindSheet from './RemindSheet';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
 import { primeDocument, useDocument, useTranslatedDocs } from '../hooks/useDocument';
-import { parseDate, daysUntil, formatTime, formatMonthDay, formatMonthShort, formatWeekdayShort } from '../utils/datetime';
+import { parseDate, daysUntil, formatTime, formatMonthDay, formatMonthShort, formatWeekdayParts } from '../utils/datetime';
 import { DocError, DocHeader, DocLoading, FallbackNotice } from './DocStatus';
 import { Mark, markAll, markNumbers } from '../utils/marks';
 
@@ -18,13 +20,26 @@ import { Mark, markAll, markNumbers } from '../utils/marks';
    type = summary | datetime | place | items | cautions | contact | category
    글자는 A의 i18n(t), 문서 내용은 C의 번역 API(useDocument)로 지금 쓰는 말에 맞춥니다.
 ─────────────────────────────────────────── */
+/* 준비물 체크 — 화면을 나갔다 와도, 앱을 껐다 켜도 그대로 남게 이 기기에 기억 ({ '문서id-순번': true }) */
+const CHECKED_KEY = 'ttobak-checked';
+function loadChecked() {
+  try { return JSON.parse(localStorage.getItem(CHECKED_KEY)) || {}; } catch { return {}; }
+}
+function saveChecked(checked) {
+  try { localStorage.setItem(CHECKED_KEY, JSON.stringify(checked)); } catch { /* 저장 불가 환경 */ }
+}
+
 export default function Detail() {
   const { docId, type } = useParams();
   const navigate = useNavigate();
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
   const { doc, error, fallback, retry } = useDocument(docId);
-  const [checked, setChecked] = useState({});
+  const [checked, setChecked] = useState(loadChecked);
+  useEffect(() => { saveChecked(checked); }, [checked]);
+
+  // 상세 화면은 늘 맨 위부터 — 앞 화면에서 내려 둔 스크롤이 그대로 남지 않게 (그리기 전에 올림)
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [docId, type]);
 
   const guide = doc ? voiceText(doc, type, t, lang) : '';
   useVoice(guide);
@@ -80,11 +95,19 @@ function SummaryScreen({ doc, t }) {
    2. 날짜·시간
 ══════════════════════════════════════════= */
 function DateTimeScreen({ doc, t, lang }) {
+  const { toast } = useUI();
+  const [remindOpen, setRemindOpen] = useState(false);
   const dt = doc.datetime;
   if (!dt) return <p className="sub">{t('d.noDate')}</p>;
 
   const dateObj = dt.date ? parseDate(dt.date) : null;
   const dday    = dateObj ? daysUntil(dateObj) : null;
+  const wd      = dateObj ? formatWeekdayParts(dateObj, lang) : null;  // ['화', '요일']
+  // 알림 받기 — 그 달 달력을 띄워 그날에 동그라미를 그려 보여 줌 (보여주기용, 실제 알림은 없음)
+  function remind() {
+    if (dday < 0) { toast(t('d.remindPast')); return; }
+    setRemindOpen(true);
+  }
 
   return (
     <>
@@ -95,7 +118,7 @@ function DateTimeScreen({ doc, t, lang }) {
             <div className="day">
               <small>{formatMonthShort(dateObj, lang)}</small>
               <b>{dateObj.getDate()}</b>
-              <span>{formatWeekdayShort(dateObj, lang)}</span>
+              <span>{wd[0]}<span className="wd-rest">{wd[1]}</span></span>
             </div>
           )}
           <div>
@@ -119,9 +142,12 @@ function DateTimeScreen({ doc, t, lang }) {
           <p style={{ margin: 0, fontWeight: 700 }}>{t('d.checkAgain')}</p>
         </div>
       )}
-      <button className="btn red">
-        <Icon name="cal" />{t('d.remind')}
-      </button>
+      {dateObj && (
+        <button className="btn red" onClick={remind}>
+          <Icon name="cal" />{t('d.remind')}
+        </button>
+      )}
+      {remindOpen && <RemindSheet date={dt.date} time={dt.time} lang={lang} onClose={() => setRemindOpen(false)} />}
     </>
   );
 }
@@ -129,6 +155,13 @@ function DateTimeScreen({ doc, t, lang }) {
 /* ═══════════════════════════════════════════
    3. 장소
 ══════════════════════════════════════════= */
+/* 길 찾기 — 카카오맵에서 주소를 검색한 화면을 새 창으로 엶
+   (휴대폰에 카카오맵 앱이 있으면 카카오맵 웹이 앱으로 열기를 안내해 줌) */
+function openKakaoMap(query) {
+  const url = `https://map.kakao.com/link/search/${encodeURIComponent(query)}`;
+  window.open(url, '_blank', 'noopener');
+}
+
 function PlaceScreen({ doc, t }) {
   const pl = doc.place;
   if (!pl) return <p className="sub">{t('d.noPlace')}</p>;
@@ -147,12 +180,11 @@ function PlaceScreen({ doc, t }) {
           <p style={{ margin: 0, fontSize: '1.08em' }}>{pl.note}</p>
         </div>
       )}
-      <button
-        className="btn primary"
-        onClick={() => alert(t('d.routeDemo'))}
-      >
-        <Icon name="pin" />{t('d.route')}
-      </button>
+      {(pl.address || pl.name) && (
+        <button className="btn primary" onClick={() => openKakaoMap(pl.address || pl.name)}>
+          <Icon name="pin" />{t('d.route')}
+        </button>
+      )}
     </>
   );
 }
@@ -266,13 +298,7 @@ function CategoryScreen({ doc, t, lang, navigate }) {
         className="card"
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
       >
-        <span
-          className="cat-pill"
-          style={{ '--c': cfg.c, '--c-soft': cfg.s }}
-        >
-          <Icon name={cfg.icon} size={16} />
-          {catLabel(t, doc.category)}
-        </span>
+        <span className="cat-pill">{catLabel(t, doc.category)}</span>
         <button
           className="btn line"
           style={{ width: 'auto', minHeight: 44, padding: '0 16px' }}

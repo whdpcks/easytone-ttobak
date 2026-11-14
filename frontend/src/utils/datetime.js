@@ -49,3 +49,24 @@ export function formatMonthShort(date, lang = 'ko') {
 export function formatWeekdayShort(date, lang = 'ko') {
   return fmt(lang, date, { weekday: 'short' });
 }
+
+/* 달력 칸 아래 요일을 두 조각으로: ['금', '요일'] / ['金', '曜日'] — 앞만 굵게 쓰려고.
+   한국어·일본어만 '요일'을 붙이고, 그 외는 짧은 이름 하나 ('Fri', '周五') */
+export function formatWeekdayParts(date, lang = 'ko') {
+  const short = formatWeekdayShort(date, lang);
+  if (lang === 'ko') return [short, '요일'];
+  if (lang === 'ja') return [short, '曜日'];
+  return [short, ''];
+}
+
+/* 알림 달력 위: "2026년 11월" / "November 2026" */
+export function formatYearMonth(date, lang = 'ko') {
+  if (lang === 'ko') return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+  return fmt(lang, date, { year: 'numeric', month: 'long' });
+}
+
+/* 알림 달력 머리줄: 일요일부터 ["일", "월", …] / ["Sun", "Mon", …] */
+export function weekdayNames(lang = 'ko') {
+  // 2026-11-01은 일요일
+  return Array.from({ length: 7 }, (_, i) => fmt(lang, new Date(2026, 10, 1 + i), { weekday: 'short' }));
+}
