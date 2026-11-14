@@ -4,6 +4,8 @@ import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
 import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
+import { useUI } from '../common/UIContext';
+import { makeIcs, saveIcs } from '../utils/calendar';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
@@ -83,12 +85,23 @@ function SummaryScreen({ doc, t }) {
    2. 날짜·시간
 ══════════════════════════════════════════= */
 function DateTimeScreen({ doc, t, lang }) {
+  const { toast } = useUI();
   const dt = doc.datetime;
   if (!dt) return <p className="sub">{t('d.noDate')}</p>;
 
   const dateObj = dt.date ? parseDate(dt.date) : null;
   const dday    = dateObj ? daysUntil(dateObj) : null;
   const wd      = dateObj ? formatWeekdayParts(dateObj, lang) : null;  // ['화', '요일']
+  // 알림 받기 — 휴대폰 달력에 넣을 일정 파일을 만들어 줌 (달력 앱이 미리 알려 줌)
+  function remind() {
+    if (dday < 0) { toast(t('d.remindPast')); return; }
+    const title = dt.label && dt.label !== doc.title ? `${doc.title} - ${dt.label}` : doc.title;
+    saveIcs(makeIcs({
+      title, date: dt.date, time: dt.time, note: dt.note,
+      location: doc.place?.address || doc.place?.name, uid: `${doc.id}-${dt.date}`,
+    }), title);
+    toast(t(dt.time ? 'd.remindDone' : 'd.remindDoneDay'));
+  }
 
   return (
     <>
@@ -123,9 +136,11 @@ function DateTimeScreen({ doc, t, lang }) {
           <p style={{ margin: 0, fontWeight: 700 }}>{t('d.checkAgain')}</p>
         </div>
       )}
-      <button className="btn red">
-        <Icon name="cal" />{t('d.remind')}
-      </button>
+      {dateObj && (
+        <button className="btn red" onClick={remind}>
+          <Icon name="cal" />{t('d.remind')}
+        </button>
+      )}
     </>
   );
 }
@@ -133,6 +148,13 @@ function DateTimeScreen({ doc, t, lang }) {
 /* ═══════════════════════════════════════════
    3. 장소
 ══════════════════════════════════════════= */
+/* 길 찾기 — 카카오맵에서 주소를 검색한 화면을 새 창으로 엶
+   (휴대폰에 카카오맵 앱이 있으면 카카오맵 웹이 앱으로 열기를 안내해 줌) */
+function openKakaoMap(query) {
+  const url = `https://map.kakao.com/link/search/${encodeURIComponent(query)}`;
+  window.open(url, '_blank', 'noopener');
+}
+
 function PlaceScreen({ doc, t }) {
   const pl = doc.place;
   if (!pl) return <p className="sub">{t('d.noPlace')}</p>;
@@ -151,12 +173,11 @@ function PlaceScreen({ doc, t }) {
           <p style={{ margin: 0, fontSize: '1.08em' }}>{pl.note}</p>
         </div>
       )}
-      <button
-        className="btn primary"
-        onClick={() => alert(t('d.routeDemo'))}
-      >
-        <Icon name="pin" />{t('d.route')}
-      </button>
+      {(pl.address || pl.name) && (
+        <button className="btn primary" onClick={() => openKakaoMap(pl.address || pl.name)}>
+          <Icon name="pin" />{t('d.route')}
+        </button>
+      )}
     </>
   );
 }
