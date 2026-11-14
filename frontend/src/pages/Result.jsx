@@ -4,9 +4,9 @@ import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
 import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
-import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { forgetDocument, useDocument } from '../hooks/useDocument';
+import { forgetPages, usePages } from '../hooks/useOriginal';
 import { deleteDocument } from '../api/documents';
 import { useUI } from '../common/UIContext';
 import { dropFromArchive } from './Archive';
@@ -24,6 +24,7 @@ export default function Result() {
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
   const { doc, error, fallback, retry } = useDocument(docId);
+  const pages = usePages(docId);  // 원문 보기 타일은 원본이 있을 때만
   const { confirm, toast } = useUI();
   const [deleting, setDeleting] = useState(false);
 
@@ -38,6 +39,7 @@ export default function Result() {
     try {
       await deleteDocument(doc.id);
       forgetDocument(doc.id);
+      forgetPages(doc.id);
       dropFromArchive(doc.id);
       toast(t('d.deleted'));
       navigate('/archive', { replace: true });
@@ -56,8 +58,6 @@ export default function Result() {
   if (error) return <DocError error={error} />;
   if (!doc) return <DocLoading />;
 
-  const cfg = CAT_CONFIG[doc.category] ?? CAT_CONFIG['기타'];
-
   return (
     <div className="app">
       <DocHeader voiceText={intro} />
@@ -73,7 +73,7 @@ export default function Result() {
         <p className="sub" style={{ fontWeight: 700, color: 'var(--ink)' }}>{t('d.pick')}</p>
 
         <div className="tiles">
-          {buildTiles(doc, cfg, t, lang).map(tile => (
+          {buildTiles(doc, t, lang, pages).map(tile => (
             <button
               key={tile.key}
               className={`tile${tile.wide ? ' wide' : ''}`}
@@ -107,7 +107,7 @@ function hasValue(v) {
   return Object.entries(v).some(([k, part]) => k !== 'check' && hasValue(part));
 }
 
-function buildTiles(doc, cfg, t, lang) {
+function buildTiles(doc, t, lang, pages) {
   const dt = doc.datetime;
   const pl = doc.place;
   const ct = doc.contact;
@@ -124,6 +124,7 @@ function buildTiles(doc, cfg, t, lang) {
       sub: t('d.count', { n: doc.cautions?.length ?? 0 }), show: hasValue(doc.cautions) },
     { key: 'contact', icon: 'phone', c: '#1F4FB8', s: '#E1E9FA', title: t('d.t.contact'),
       sub: ct?.phone || ct?.name, show: hasValue(ct) },
-    { key: 'category', icon: 'tag', c: cfg.c, s: cfg.s, title: t('d.t.category'), sub: catLabel(t, doc.category), show: true },
+    // 카테고리 타일 대신 원문 보기 (찍거나 올린 원본이 있을 때만 — 시연 샘플 문서에는 없음)
+    { key: 'original', icon: 'doc', c: '#4A5066', s: '#ECECE6', title: t('d.t.original'), sub: t('d.origSub'), show: pages?.length > 0 },
   ].filter(tile => tile.show);
 }

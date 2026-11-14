@@ -167,6 +167,19 @@
 .tile.wide > div { flex: 1; min-width: 0; }
 .tile:active { transform: scale(.98); }
 
+/* 원문 보기 — 종이 사진을 화면 너비에 맞춰, 여러 장이면 아래로 이어서 */
+.orig-page { position: relative; margin: 0; background: #fff; border: 2px solid var(--rule); border-radius: 16px; overflow: hidden; }
+.orig-page img { display: block; width: 100%; height: auto; }
+.orig-page figcaption {
+  position: absolute; right: 10px; bottom: 10px; min-width: 32px; padding: 2px 10px;
+  border-radius: 999px; background: rgba(22, 27, 46, .75); color: #fff; font-weight: 700; font-size: .85em; text-align: center;
+}
+.orig-ph {  /* 아직 받는/그리는 중인 종이 자리 */
+  aspect-ratio: 3 / 4; border-radius: 16px;
+  background: linear-gradient(90deg, #eee 0, #f8f8f4 50%, #eee 100%); background-size: 200% 100%;
+  animation: sh 1s linear infinite;
+}
+
 /* 결과 화면 맨 아래 — 문서 삭제 (테두리·바탕 없이 빨간 글자만) */
 .del-doc {
   font: inherit; font-weight: 700; color: var(--red);
@@ -232,7 +245,7 @@
 .rc-when { font-size: 1.05em; animation: pop-in .8s 1.2s cubic-bezier(.25, .6, .3, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .shimmer, .search button.mic.on { animation: none; }
+  .shimmer, .search button.mic.on, .orig-ph { animation: none; }
   .tile:active { transform: none; }
   .mark .rise, .pop-in, .cal .day, .dday, .check button .box { animation: none; }
   .check .box svg path { transition: none; }
