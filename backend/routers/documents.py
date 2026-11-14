@@ -1,10 +1,11 @@
 """
 D 담당 — GET /documents?category=  (보관함 목록)
+         DELETE /documents/{id}     (문서 삭제)
 문서 한 건 조회(GET /documents/{id})와 진행 상태는 C의 라우터가 담당합니다.
 """
-from fastapi import APIRouter, Depends
-from common.auth import get_current_user
-from database import completed_documents, with_cached_translations
+from fastapi import APIRouter, Depends, Response
+from common.auth import get_current_user, require_document_owner
+from database import completed_documents, delete_document, with_cached_translations
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -18,3 +19,10 @@ def list_documents(category: str | None = None, lang: str | None = None,
     if category:
         docs = [d for d in docs if d["category"] == category]
     return with_cached_translations(docs, lang)
+
+
+@router.delete("/{document_id}", status_code=204)
+def remove_document(document_id: int, user: dict = Depends(require_document_owner)):
+    """문서 삭제 — 내 문서만 (남의 문서·없는 문서는 A의 검사에서 404). 지우면 되돌릴 수 없음."""
+    delete_document(document_id)
+    return Response(status_code=204)

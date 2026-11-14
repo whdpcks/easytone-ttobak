@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../utils/icons';
 import useVoice from '../hooks/useVoice';
@@ -6,7 +6,10 @@ import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
-import { useDocument } from '../hooks/useDocument';
+import { forgetDocument, useDocument } from '../hooks/useDocument';
+import { deleteDocument } from '../api/documents';
+import { useUI } from '../common/UIContext';
+import { dropFromArchive } from './Archive';
 import { formatDay, formatTime } from '../utils/datetime';
 import { DocError, DocHeader, DocLoading, FallbackNotice } from './DocStatus';
 
@@ -21,6 +24,28 @@ export default function Result() {
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
   const { doc, error, fallback, retry } = useDocument(docId);
+  const { confirm, toast } = useUI();
+  const [deleting, setDeleting] = useState(false);
+
+  // 삭제하기 — 문서 이름과 함께 한 번 더 묻고, 지우면 보관함으로
+  async function remove() {
+    const ok = await confirm({
+      title: doc.title, message: t('d.delAsk'),
+      okText: t('d.delYes'), cancelText: t('d.delNo'), danger: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await deleteDocument(doc.id);
+      forgetDocument(doc.id);
+      dropFromArchive(doc.id);
+      toast(t('d.deleted'));
+      navigate('/archive', { replace: true });
+    } catch {
+      setDeleting(false);
+      toast(t('d.delFail'));
+    }
+  }
 
   // 보관함에서 [보기]로 들어오면 늘 맨 위부터 — 목록에서 내려 둔 스크롤이 남지 않게 (그리기 전에 올림)
   useLayoutEffect(() => { window.scrollTo(0, 0); }, [docId]);
@@ -65,6 +90,10 @@ export default function Result() {
             </button>
           ))}
         </div>
+
+        <button className="del-doc" onClick={remove} disabled={deleting}>
+          <Icon name="trash" />{t('d.delete')}
+        </button>
       </div>
     </div>
   );

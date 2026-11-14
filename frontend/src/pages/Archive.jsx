@@ -10,6 +10,7 @@ import { CAT_CONFIG, CATEGORIES } from '../utils/catConfig';
 import { catLabel, docLang, suggestions } from '../utils/archiveText';
 import { getDocuments, searchDocuments } from '../api/documents';
 import { useTranslatedDocs, primeDocument } from '../hooks/useDocument';
+import useSpeechInput from '../hooks/useSpeechInput';
 
 /* ───────────────────────────────────────────
    보관함 메인 화면 (SCR-10)
@@ -17,6 +18,11 @@ import { useTranslatedDocs, primeDocument } from '../hooks/useDocument';
 ─────────────────────────────────────────── */
 /* 지난번 받은 목록 — key: `${category}:${lang}`. 다시 올 때 바로 보여 주고 뒤에서 새로 받음 */
 const listCache = new Map();
+
+/** 지운 문서를 기억해 둔 목록에서도 빼기 — 보관함으로 돌아갔을 때 잠깐이라도 보이지 않게 */
+export function dropFromArchive(docId) {
+  for (const [key, list] of listCache) if (Array.isArray(list)) listCache.set(key, list.filter(d => d.id !== Number(docId)));
+}
 
 export default function Archive() {
   const navigate = useNavigate();
@@ -62,6 +68,21 @@ export default function Archive() {
       : t('d.noneVoice');
 
   useVoice(guide);
+
+  /* 말로 찾기 — 말하는 동안 검색창에 글자를 채우고, 말이 끝나면 그 말로 검색 */
+  const MIC_ERR = { none: 'd.micNone', denied: 'd.micDenied', network: 'd.micNet', unsupported: 'd.micNo' };
+  const mic = useSpeechInput({
+    onText: text => { if (inputRef.current) inputRef.current.value = text; },
+    onDone: text => { if (inputRef.current) inputRef.current.value = text; doSearch(text); },
+    onError: kind => toast(t(MIC_ERR[kind])),
+  });
+  function micClick() {
+    if (!mic.listening && mic.supported) {
+      if (inputRef.current) inputRef.current.value = '';  // 새로 말한 것만 보이게
+      toast(t('d.micOn'), { voice: false });  // 소리 안내는 마이크에 들어가니 글자로만
+    }
+    mic.toggle();
+  }
 
   /* AI 검색 실행 */
   async function doSearch(q) {
@@ -118,20 +139,16 @@ export default function Archive() {
           <Icon name="search" />
           <input
             ref={inputRef}
-            placeholder={t('d.searchPh')}
+            placeholder={mic.listening ? t('d.listening') : t('d.searchPh')}
             defaultValue={query}
             aria-label={t('d.searchAria')}
           />
           <button
             type="button"
-            className="mic"
-            aria-label={t('d.mic')}
-            onClick={() => {
-              /* 음성 입력 — P1, 시연에서는 첫 추천어('일하는거') 자동 타이핑 */
-              const q = t('d.sugg1');
-              inputRef.current.value = q;
-              doSearch(q);
-            }}
+            className={`mic${mic.listening ? ' on' : ''}`}
+            aria-label={mic.listening ? t('d.micStop') : t('d.mic')}
+            aria-pressed={mic.listening}
+            onClick={micClick}
           >
             <Icon name="mic" />
           </button>

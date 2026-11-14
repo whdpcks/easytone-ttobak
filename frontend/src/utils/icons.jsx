@@ -37,6 +37,9 @@ const paths = {
   box:     <path d="M3 5.5h6.5l2 2.5H21v11.5H3z"/>,
   camera:  <><path d="M3 7.5h4L8.5 5h7L17 7.5h4V19H3z"/><circle cx="12" cy="13" r="3.5"/><path d="M18 10.5h.01"/></>,
   upload:  <><path d="M12 15V3.5M7.5 8L12 3.5 16.5 8"/><path d="M8.5 10.5H5V21h14V10.5h-3.5"/></>,
+
+  // 문서 삭제 (휴지통)
+  trash:   <><path d="M4 6.5h16M9.5 6.5V4h5v2.5"/><path d="M6 6.5l1 14h10l1-14"/><path d="M10 10.5v6M14 10.5v6"/></>,
 };
 
 export default function Icon({ name, size = 24, ...props }) {

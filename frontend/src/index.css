@@ -21,6 +21,9 @@
   cursor: pointer; display: grid; place-items: center;
 }
 .search button.mic { background: var(--hl); color: var(--ink); }
+/* 말로 찾기 — 듣는 동안 빨갛게, 숨 쉬듯 둘레가 퍼짐 */
+.search button.mic.on { background: var(--red); color: #fff; animation: mic-on 1.4s ease-out infinite; }
+@keyframes mic-on { from { box-shadow: 0 0 0 0 rgba(214, 40, 57, .45); } to { box-shadow: 0 0 0 12px rgba(214, 40, 57, 0); } }
 
 /* 추천 검색어 */
 .sugg { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -164,6 +167,16 @@
 .tile.wide > div { flex: 1; min-width: 0; }
 .tile:active { transform: scale(.98); }
 
+/* 결과 화면 맨 아래 — 문서 삭제 (테두리·바탕 없이 빨간 글자만) */
+.del-doc {
+  font: inherit; font-weight: 700; color: var(--red);
+  background: none; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 56px; margin-top: 4px; padding: 0 16px; align-self: center;
+}
+.del-doc svg { width: 22px; height: 22px; }
+.del-doc:disabled { opacity: .5; cursor: default; }
+
 /* ═══════════ D: 움직이는 효과 ═══════════ */
 
 /* 강조 — 중요한 곳은 굵게, 낱말이 하나씩 아래에서 떠오름 (위치·투명도만 움직여 가벼움) */
@@ -219,7 +232,7 @@
 .rc-when { font-size: 1.05em; animation: pop-in .8s 1.2s cubic-bezier(.25, .6, .3, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .shimmer { animation: none; }
+  .shimmer, .search button.mic.on { animation: none; }
   .tile:active { transform: none; }
   .mark .rise, .pop-in, .cal .day, .dday, .check button .box { animation: none; }
   .check .box svg path { transition: none; }

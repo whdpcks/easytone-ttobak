@@ -24,3 +24,8 @@ export function searchDocuments(q, lang = 'ko') {
   const qs = [`q=${encodeURIComponent(q)}`, langQs(lang)].filter(Boolean).join('&');
   return api.get(`/search?${qs}`);
 }
+
+/** 문서 삭제  DELETE /documents/:id  (내 문서만, 되돌릴 수 없음) */
+export function deleteDocument(id) {
+  return api.del(`/documents/${id}`);
+}
