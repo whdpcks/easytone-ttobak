@@ -5,7 +5,7 @@ import useVoice from '../hooks/useVoice';
 import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
 import { useUI } from '../common/UIContext';
-import { makeIcs, saveIcs } from '../utils/calendar';
+import RemindSheet from './RemindSheet';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
@@ -20,13 +20,23 @@ import { Mark, markAll, markNumbers } from '../utils/marks';
    type = summary | datetime | place | items | cautions | contact | category
    글자는 A의 i18n(t), 문서 내용은 C의 번역 API(useDocument)로 지금 쓰는 말에 맞춥니다.
 ─────────────────────────────────────────── */
+/* 준비물 체크 — 화면을 나갔다 와도, 앱을 껐다 켜도 그대로 남게 이 기기에 기억 ({ '문서id-순번': true }) */
+const CHECKED_KEY = 'ttobak-checked';
+function loadChecked() {
+  try { return JSON.parse(localStorage.getItem(CHECKED_KEY)) || {}; } catch { return {}; }
+}
+function saveChecked(checked) {
+  try { localStorage.setItem(CHECKED_KEY, JSON.stringify(checked)); } catch { /* 저장 불가 환경 */ }
+}
+
 export default function Detail() {
   const { docId, type } = useParams();
   const navigate = useNavigate();
   const lang = docLang(useSettings().lang);  // D는 한·영·일·중만, 그 외는 영어
   const t = useT();
   const { doc, error, fallback, retry } = useDocument(docId);
-  const [checked, setChecked] = useState({});
+  const [checked, setChecked] = useState(loadChecked);
+  useEffect(() => { saveChecked(checked); }, [checked]);
 
   // 상세 화면은 늘 맨 위부터 — 앞 화면에서 내려 둔 스크롤이 그대로 남지 않게 (그리기 전에 올림)
   useLayoutEffect(() => { window.scrollTo(0, 0); }, [docId, type]);
@@ -86,21 +96,17 @@ function SummaryScreen({ doc, t }) {
 ══════════════════════════════════════════= */
 function DateTimeScreen({ doc, t, lang }) {
   const { toast } = useUI();
+  const [remindOpen, setRemindOpen] = useState(false);
   const dt = doc.datetime;
   if (!dt) return <p className="sub">{t('d.noDate')}</p>;
 
   const dateObj = dt.date ? parseDate(dt.date) : null;
   const dday    = dateObj ? daysUntil(dateObj) : null;
   const wd      = dateObj ? formatWeekdayParts(dateObj, lang) : null;  // ['화', '요일']
-  // 알림 받기 — 휴대폰 달력에 넣을 일정 파일을 만들어 줌 (달력 앱이 미리 알려 줌)
+  // 알림 받기 — 그 달 달력을 띄워 그날에 동그라미를 그려 보여 줌 (보여주기용, 실제 알림은 없음)
   function remind() {
     if (dday < 0) { toast(t('d.remindPast')); return; }
-    const title = dt.label && dt.label !== doc.title ? `${doc.title} - ${dt.label}` : doc.title;
-    saveIcs(makeIcs({
-      title, date: dt.date, time: dt.time, note: dt.note,
-      location: doc.place?.address || doc.place?.name, uid: `${doc.id}-${dt.date}`,
-    }), title);
-    toast(t(dt.time ? 'd.remindDone' : 'd.remindDoneDay'));
+    setRemindOpen(true);
   }
 
   return (
@@ -141,6 +147,7 @@ function DateTimeScreen({ doc, t, lang }) {
           <Icon name="cal" />{t('d.remind')}
         </button>
       )}
+      {remindOpen && <RemindSheet date={dt.date} time={dt.time} lang={lang} onClose={() => setRemindOpen(false)} />}
     </>
   );
 }

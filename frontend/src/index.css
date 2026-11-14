@@ -192,9 +192,37 @@
 .check button[aria-pressed="true"] .box { animation: box-pop .3s ease-out; }
 @keyframes box-pop { 50% { transform: scale(1.18); } }
 
+/* 알림 받기 — 그 달 달력, 그날에 펜으로 동그라미 (RemindSheet.jsx) */
+.remind-cal { background: #fff; border: 2px solid var(--rule); border-radius: 20px; padding: 14px 12px 10px; }
+.rc-month { display: block; text-align: center; font-size: 1.1em; margin-bottom: 8px; }
+.rc-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 4px; text-align: center; }
+.rc-wd { font-size: .78em; font-weight: 700; color: var(--ink2); padding-bottom: 4px; }
+.rc-day { position: relative; line-height: 2.1; font-size: .95em; color: var(--ink); }
+.rc-wd.sun, .rc-day.sun { color: var(--red); }
+.rc-day.today::after {  /* 오늘은 아래 작은 점 */
+  content: ''; position: absolute; left: 50%; bottom: 3px; width: 4px; height: 4px;
+  margin-left: -2px; border-radius: 50%; background: var(--ink2);
+}
+.rc-day.hit { font-weight: 700; animation: rc-hit .5s 1.15s ease-out both; }
+@keyframes rc-hit { 40% { transform: scale(1.18); } }
+.rc-ring {
+  position: absolute; left: 50%; top: 50%; width: 2.6em; height: 2.3em;
+  transform: translate(-50%, -50%) rotate(-6deg); overflow: visible; pointer-events: none;
+}
+.rc-ring path {
+  fill: none; stroke: var(--red); stroke-width: 3.2; stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: rc-draw .8s .4s cubic-bezier(.45, .1, .3, 1) forwards;  /* 시트가 올라온 뒤 그리기 시작 */
+}
+@keyframes rc-draw { to { stroke-dashoffset: 0; } }
+.rc-when { font-size: 1.05em; animation: pop-in .8s 1.2s cubic-bezier(.25, .6, .3, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   .shimmer { animation: none; }
   .tile:active { transform: none; }
   .mark .rise, .pop-in, .cal .day, .dday, .check button .box { animation: none; }
   .check .box svg path { transition: none; }
+  .rc-day.hit, .rc-when { animation: none; }
+  .rc-ring path { animation: none; stroke-dashoffset: 0; }
 }

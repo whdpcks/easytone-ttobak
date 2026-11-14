@@ -58,3 +58,15 @@ export function formatWeekdayParts(date, lang = 'ko') {
   if (lang === 'ja') return [short, '曜日'];
   return [short, ''];
 }
+
+/* 알림 달력 위: "2026년 11월" / "November 2026" */
+export function formatYearMonth(date, lang = 'ko') {
+  if (lang === 'ko') return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+  return fmt(lang, date, { year: 'numeric', month: 'long' });
+}
+
+/* 알림 달력 머리줄: 일요일부터 ["일", "월", …] / ["Sun", "Mon", …] */
+export function weekdayNames(lang = 'ko') {
+  // 2026-11-01은 일요일
+  return Array.from({ length: 7 }, (_, i) => fmt(lang, new Date(2026, 10, 1 + i), { weekday: 'short' }));
+}
