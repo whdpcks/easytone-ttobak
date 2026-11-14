@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/screenshots/readme/logo.png" width="260" alt="또박 로고">
+<img src="docs/screenshots/readme/logo.png" width="320" alt="또박 로고: 노란 말풍선 문서 아이콘과 또박 글자">
 
 # 복잡한 안내문을, 쉬운 행동으로.
 
