@@ -6,6 +6,7 @@ import { useSettings } from '../common/SettingsContext';
 import { useT } from '../common/i18n';
 import { useUI } from '../common/UIContext';
 import RemindSheet from './RemindSheet';
+import { useOriginalImages, usePages } from '../hooks/useOriginal';
 import { CAT_CONFIG } from '../utils/catConfig';
 import { catLabel, docLang } from '../utils/archiveText';
 import { getDocuments } from '../api/documents';
@@ -62,10 +63,37 @@ export default function Detail() {
         {type === 'cautions' && <CautionsScreen  {...props} />}
         {type === 'contact'  && <ContactScreen   {...props} />}
         {type === 'category' && <CategoryScreen  {...props} navigate={navigate} />}
+        {type === 'original' && <OriginalScreen  {...props} />}
 
         <button className="btn line" onClick={() => navigate(-1)}>{t('d.other')}</button>
       </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   원문 보기 — 찍거나 올린 종이 그대로 (사진은 그대로, PDF는 앱 안에서 페이지마다 그려서)
+══════════════════════════════════════════= */
+function OriginalScreen({ doc, t }) {
+  const pages = usePages(doc.id);
+  const { images, loading, failed } = useOriginalImages(doc.id, pages);
+  const none = pages && pages.length === 0;
+  return (
+    <>
+      <h1 className="h">{t('d.origH')}</h1>
+      {none
+        ? <p className="sub">{t('d.origNone')}</p>
+        : <p className="sub">{t('d.origHint')}</p>}
+      {images.map((img, i) => (
+        <figure key={img.key} className="orig-page pop-in" style={{ '--i': 0 }}>
+          <img src={img.url} alt={t('d.origAlt', { n: i + 1 })}
+            style={img.w ? { aspectRatio: `${img.w} / ${img.h}` } : undefined} />
+          {(images.length > 1 || loading) && <figcaption>{i + 1}</figcaption>}
+        </figure>
+      ))}
+      {!none && loading && !failed && <div className="orig-ph" aria-busy="true" />}
+      {failed && <p className="err">{t('d.origFail')}</p>}
+    </>
   );
 }
 
@@ -356,6 +384,8 @@ function phoneNumber(phone) {
 function voiceText(doc, type, t, lang) {
   if (!doc) return '';
   switch (type) {
+    case 'original':
+      return t('v.original');
     case 'summary':
       return t('v.summary', { s: (doc.summary || []).join(' ') });
     case 'datetime': {

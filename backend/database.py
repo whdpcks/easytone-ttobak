@@ -58,3 +58,45 @@ def delete_document(document_id: int) -> None:
     # B가 올린 사진: <TTOBAK_DATA_DIR>/uploads/<문서 id>/
     folder = Path(os.getenv("TTOBAK_DATA_DIR", "data")) / "uploads" / str(int(document_id))
     shutil.rmtree(folder, ignore_errors=True)
+
+
+def _uploads_dir() -> Path:
+    return Path(os.getenv("TTOBAK_DATA_DIR", "data")) / "uploads"
+
+
+def _pages(document_id: int) -> list[dict]:
+    db_path = Path(os.getenv("TTOBAK_DB_PATH", "data/ttobak.db"))
+    if not db_path.exists():
+        return []
+    with closing(sqlite3.connect(db_path, timeout=10)) as conn:
+        conn.row_factory = sqlite3.Row
+        try:
+            rows = conn.execute(
+                "SELECT id, page_number, filename FROM pages WHERE document_id = ? ORDER BY page_number",
+                (document_id,),
+            ).fetchall()
+        except sqlite3.OperationalError:  # B의 pages 표가 아직 없음
+            return []
+    return [dict(r) for r in rows]
+
+
+def document_pages(document_id: int) -> list[dict]:
+    """원문 보기용 원본 목록 — 파일이 실제로 남아 있는 것만. B는 사진을 .jpg, PDF를 올린 그대로 .pdf로 저장합니다."""
+    folder = _uploads_dir() / str(int(document_id))
+    out = []
+    for page in _pages(document_id):
+        if (folder / page["filename"]).is_file():
+            kind = "pdf" if page["filename"].lower().endswith(".pdf") else "image"
+            out.append({"id": page["id"], "page_number": page["page_number"], "kind": kind})
+    return out
+
+
+def page_file(document_id: int, page_id: str) -> tuple[Path, str] | None:
+    """원본 파일 경로와 형식. DB에 있는 이 문서의 페이지만 (경로를 사용자가 정하지 못하게 DB의 파일 이름을 씀)."""
+    for page in _pages(document_id):
+        if page["id"] == page_id:
+            path = _uploads_dir() / str(int(document_id)) / page["filename"]
+            if not path.is_file():
+                return None
+            return path, "application/pdf" if path.suffix.lower() == ".pdf" else "image/jpeg"
+    return None
